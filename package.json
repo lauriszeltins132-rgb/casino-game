@@ -2,7 +2,7 @@
   "name": "cursed-chest",
   "version": "1.0.0",
   "private": true,
-  "description": "Cursed Chest - instant casino treasure game",
+  "description": "Pirate's Bounty - 10-line pirate slot game",
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "npm run dev --workspace=server",

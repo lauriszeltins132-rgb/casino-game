@@ -1,8 +1,6 @@
-# Cursed Chest
+# Pirate's Bounty — Slot Game
 
-A fast casino instant game where players open treasure chests, build a multiplier, and cash out before triggering the curse.
-
-**Mines + treasure hunt + cashout tension** — pick a chest, grow your multiplier, or lose it all to the curse.
+A pirate-themed 5-reel, 10-line video slot with real spins, bet sizing, free spins, and bonus buy. Server-side math targets ~96% RTP.
 
 ## Quick Start
 
@@ -14,54 +12,42 @@ npm run dev
 - **Client:** http://localhost:5173
 - **Server API:** http://localhost:3001
 
-## Game Features (v1)
+## Features
 
-- 5 treasure chests, 1 hidden curse per round
-- Escalating multiplier progression after each safe pick
-- Cash out anytime after a safe chest
-- Golden Key bonus vault (3 special chests)
-- 3 risk modes: Low / Medium / High
-- Server-side RTP logic (~96% target)
-- Max win cap (500× bet)
-- Premium dark ocean cave theme with animations
-- Mobile-friendly layout
+- **5×3 reel grid** with 10 fixed paylines
+- **Spin button** with staggered reel-stop animations
+- **Bet per line** presets + / − adjust (€0.10 – €10.00 per line)
+- **Total bet** = bet per line × 10 lines
+- **Free spins** — 3+ scatters award 10 free spins (2× multiplier)
+- **Bonus buy** — pay 100× total bet to instantly trigger free spins
+- **Server-side RTP** (~96% target) with weighted reel strips
+- **Pirate theme** — coins, anchors, captains, ships, kraken wilds, diamond scatters
+
+## Symbols & Pays (per line bet)
+
+| Symbol | 3 | 4 | 5 |
+|--------|---|---|---|
+| 🪙⚓🧭 (low) | 0.4–0.5× | 0.8–1× | 2–2.5× |
+| 🦜🗺️ (mid) | 0.8–1× | 2–2.5× | 4–5× |
+| 🏴‍☠️⛵ (high) | 1.5–2× | 4–5× | 10–12× |
+| 🐙 Wild | 3× | 8× | 20× |
+| 💎 Scatter | 2× total bet (3) / 10× (4) / 50× (5) + free spins |
 
 ## Architecture
 
 ```
-├── client/          React + Vite frontend
-├── server/          Express API with server-side game logic
-└── package.json     Monorepo root
+client/   React + Vite — reel animations, bet controls, bonus buy UI
+server/   Express — reel strips, payline evaluation, RTP logic, sessions
 ```
 
-All chest contents, curse placement, and multipliers are determined **server-side**. The client cannot influence outcomes or exploit patterns.
+All outcomes are determined server-side. The client only displays results.
 
-## API Endpoints
+## API
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/health` | Health check |
-| GET | `/api/rtp` | RTP configuration info |
-| GET | `/api/balance` | Player balance |
-| POST | `/api/round/start` | Start new round |
-| POST | `/api/round/pick` | Pick a chest |
-| POST | `/api/round/cashout` | Cash out current multiplier |
-| POST | `/api/bonus/accept` | Enter Golden Key bonus |
-| POST | `/api/bonus/decline` | Take win, skip bonus |
-| POST | `/api/bonus/pick` | Pick bonus chest |
+| GET | `/api/slot/config` | Paytable, lines, bet limits |
+| POST | `/api/slot/spin` | Spin reels `{ betPerLine, sessionId? }` |
+| POST | `/api/slot/bonus-buy` | Buy free spins `{ betPerLine }` |
 
-## Risk Modes
-
-| Mode | Multipliers (picks 1–4) | Golden Key Chance |
-|------|-------------------------|-------------------|
-| Low | 1.15× → 2.8× | 6% |
-| Medium | 1.25× → 4.5× | 8% |
-| High | 1.4× → 7× | 10% |
-
-## Demo
-
-Demo balance starts at €1000. Use `POST /api/balance/demo` to reset.
-
-## Positioning
-
-Cursed Chest is an **instant casino game**, not a slot. Simple pick-and-reveal gameplay with cashout tension, Golden Key bonus moments, and premium treasure-themed animations.
+Demo balance: €1000 — reset via `POST /api/balance/demo`

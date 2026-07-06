@@ -1,37 +1,43 @@
-import styles from './Game.module.css';
+import styles from './Slot.module.css';
+import { formatMoney } from '../utils/symbols';
 
 interface Props {
   balance: number;
-  multiplier: number;
-  potentialWin: number;
-  bet: number;
+  lastWin: number;
+  totalBet: number;
+  freeSpinsRemaining: number;
+  isFreeSpin: boolean;
 }
 
-export function Header({ balance, multiplier, potentialWin, bet }: Props) {
+export function Header({ balance, lastWin, totalBet, freeSpinsRemaining, isFreeSpin }: Props) {
   return (
     <header className={styles.header}>
       <div className={styles.logo}>
-        <span className={styles.logoIcon}>⚓</span>
-        <h1 className={styles.logoText}>Cursed Chest</h1>
+        <span className={styles.logoEmoji}>🏴‍☠️</span>
+        <h1 className={styles.logoText}>Pirate&apos;s Bounty</h1>
       </div>
 
-      <div className={styles.stats}>
+      <div className={styles.statsRow}>
         <div className={styles.stat}>
           <span className={styles.statLabel}>Balance</span>
-          <span className={styles.statValue}>€{balance.toFixed(2)}</span>
+          <span className={styles.statValue}>{formatMoney(balance)}</span>
         </div>
-        <div className={`${styles.stat} ${styles.statHighlight}`}>
-          <span className={styles.statLabel}>Multiplier</span>
-          <span className={styles.multiplierValue}>{multiplier.toFixed(2)}x</span>
+        <div className={`${styles.stat} ${lastWin > 0 ? styles.statWin : ''}`}>
+          <span className={styles.statLabel}>Last Win</span>
+          <span className={styles.statValue}>{formatMoney(lastWin)}</span>
         </div>
         <div className={styles.stat}>
-          <span className={styles.statLabel}>Potential Win</span>
-          <span className={`${styles.statValue} ${styles.statGold}`}>€{potentialWin.toFixed(2)}</span>
+          <span className={styles.statLabel}>Total Bet</span>
+          <span className={styles.statValue}>
+            {isFreeSpin ? 'FREE' : formatMoney(totalBet)}
+          </span>
         </div>
       </div>
 
-      {bet > 0 && (
-        <div className={styles.betBadge}>Bet: €{bet.toFixed(2)}</div>
+      {freeSpinsRemaining > 0 && (
+        <div className={styles.freeSpinBanner}>
+          FREE SPINS: {freeSpinsRemaining} remaining (2× multiplier)
+        </div>
       )}
     </header>
   );

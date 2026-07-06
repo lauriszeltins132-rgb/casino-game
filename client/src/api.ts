@@ -1,10 +1,4 @@
-import type {
-  BonusChoiceResult,
-  CashoutResult,
-  PickResult,
-  RiskMode,
-  RoundPublicView,
-} from './types';
+import type { SlotConfig, SpinResponse } from './types';
 
 const API = '/api';
 
@@ -24,45 +18,22 @@ export const api = {
   resetDemoBalance: () =>
     request<{ balance: number }>('/balance/demo', { method: 'POST' }),
 
-  startRound: (bet: number, riskMode: RiskMode) =>
-    request<RoundPublicView>('/round/start', {
+  getConfig: () => request<SlotConfig>('/slot/config'),
+
+  getSession: () =>
+    request<{ session: { id: string; remaining: number; totalWin: number } | null }>(
+      '/slot/session'
+    ),
+
+  spin: (betPerLine: number, sessionId?: string) =>
+    request<SpinResponse>('/slot/spin', {
       method: 'POST',
-      body: JSON.stringify({ bet, riskMode }),
+      body: JSON.stringify({ betPerLine, sessionId }),
     }),
 
-  pickChest: (roundId: string, chestIndex: number) =>
-    request<PickResult>('/round/pick', {
+  bonusBuy: (betPerLine: number) =>
+    request<SpinResponse>('/slot/bonus-buy', {
       method: 'POST',
-      body: JSON.stringify({ roundId, chestIndex }),
-    }),
-
-  cashOut: (roundId: string) =>
-    request<CashoutResult>('/round/cashout', {
-      method: 'POST',
-      body: JSON.stringify({ roundId }),
-    }),
-
-  acceptBonus: (roundId: string) =>
-    request<RoundPublicView>('/bonus/accept', {
-      method: 'POST',
-      body: JSON.stringify({ roundId }),
-    }),
-
-  declineBonus: (roundId: string) =>
-    request<CashoutResult>('/bonus/decline', {
-      method: 'POST',
-      body: JSON.stringify({ roundId }),
-    }),
-
-  pickBonusChest: (roundId: string, chestIndex: number) =>
-    request<BonusChoiceResult>('/bonus/pick', {
-      method: 'POST',
-      body: JSON.stringify({ roundId, chestIndex }),
-    }),
-
-  revealRemaining: (roundId: string) =>
-    request<{ chests: RoundPublicView['chests'] }>('/round/reveal', {
-      method: 'POST',
-      body: JSON.stringify({ roundId }),
+      body: JSON.stringify({ betPerLine }),
     }),
 };

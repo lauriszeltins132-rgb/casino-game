@@ -1,68 +1,65 @@
-export type RiskMode = 'low' | 'medium' | 'high';
+export type SymbolId =
+  | 'coin'
+  | 'anchor'
+  | 'compass'
+  | 'parrot'
+  | 'map'
+  | 'captain'
+  | 'ship'
+  | 'wild'
+  | 'scatter';
 
-export type ChestContent = 'treasure' | 'curse' | 'golden_key';
-
-export type RoundStatus =
-  | 'active'
-  | 'cashed_out'
-  | 'lost'
-  | 'bonus_pending'
-  | 'bonus_active'
-  | 'completed';
-
-export type WinTier = 'nice' | 'big' | 'epic';
-
-export type BonusChestResult = 'small_boost' | 'big_boost' | 'curse';
-
-export interface PublicChest {
-  index: number;
-  opened: boolean;
-  content?: ChestContent;
+export interface SymbolInfo {
+  id: SymbolId;
+  name: string;
+  emoji: string;
+  tier: 'low' | 'mid' | 'high' | 'special';
 }
 
-export interface RoundPublicView {
-  roundId: string;
-  bet: number;
-  riskMode: RiskMode;
-  multiplier: number;
-  potentialWin: number;
-  safePickCount: number;
-  chests: PublicChest[];
-  status: RoundStatus;
-  canCashOut: boolean;
-  canPick: boolean;
+export interface LineWin {
+  lineIndex: number;
+  symbol: SymbolId;
+  count: number;
+  payout: number;
+}
+
+export interface SpinResponse {
+  grid: SymbolId[][];
+  lineWins: LineWin[];
+  scatterCount: number;
+  scatterPayout: number;
+  linePayout: number;
+  totalWin: number;
+  freeSpinsAwarded: number;
+  freeSpinsRemaining: number;
+  freeSpinSessionId: string | null;
+  freeSpinSessionTotalWin: number;
   balance: number;
+  bet: number;
+  isFreeSpin: boolean;
+  isBonusBuy: boolean;
 }
 
-export interface PickResult {
-  round: RoundPublicView;
-  pickedContent: ChestContent;
-  roundEnded: boolean;
-  winAmount?: number;
-  winTier?: WinTier;
-  showBonusChoice?: boolean;
+export interface SlotConfig {
+  symbols: SymbolInfo[];
+  paytable: Record<SymbolId, [number, number, number]>;
+  paylines: number[][];
+  lineCount: number;
+  scatterPay: Record<number, number>;
+  freeSpinsAward: number;
+  freeSpinMultiplier: number;
+  bonusBuyCostMultiplier: number;
+  targetRtp: number;
+  minBetPerLine: number;
+  maxBetPerLine: number;
+  betPresets: number[];
 }
 
-export interface CashoutResult {
-  round: RoundPublicView;
-  winAmount: number;
-  winTier: WinTier;
+export interface FreeSpinSession {
+  id: string;
+  betPerLine: number;
+  remaining: number;
+  totalWin: number;
 }
 
-export interface BonusChoiceResult {
-  round: RoundPublicView;
-  result: BonusChestResult;
-  multiplierDelta: number;
-  roundEnded: boolean;
-  winAmount?: number;
-  winTier?: WinTier;
-}
-
-export type GamePhase =
-  | 'idle'
-  | 'playing'
-  | 'opening'
-  | 'bonus_choice'
-  | 'bonus_pick'
-  | 'won'
-  | 'lost';
+export type GameState = 'idle' | 'spinning' | 'showing_win' | 'free_spins_intro';

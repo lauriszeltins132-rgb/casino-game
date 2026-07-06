@@ -1,0 +1,548 @@
+/* ===== Layout ===== */
+.game {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background: #050810;
+}
+
+.bgOcean {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 100% 60% at 50% 100%, rgba(15, 40, 80, 0.6) 0%, transparent 70%),
+    radial-gradient(ellipse 80% 40% at 20% 20%, rgba(212, 168, 67, 0.06) 0%, transparent 50%),
+    linear-gradient(180deg, #04060e 0%, #0a1225 50%, #0d1a30 100%);
+  z-index: 0;
+}
+
+.bgShip {
+  position: fixed;
+  bottom: 28%;
+  right: 5%;
+  width: 120px;
+  height: 80px;
+  opacity: 0.08;
+  font-size: 5rem;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.bgShip::after {
+  content: '⛵';
+}
+
+/* ===== Header ===== */
+.header {
+  position: relative;
+  z-index: 10;
+  padding: 12px 16px 8px;
+  text-align: center;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.logoEmoji {
+  font-size: 1.6rem;
+  filter: drop-shadow(0 0 8px rgba(212, 168, 67, 0.5));
+}
+
+.logoText {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #f0c85a, #8b6914);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.05em;
+}
+
+.statsRow {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.stat {
+  background: rgba(10, 16, 30, 0.9);
+  border: 1px solid rgba(212, 168, 67, 0.2);
+  border-radius: 10px;
+  padding: 6px 14px;
+  min-width: 90px;
+}
+
+.statWin {
+  border-color: rgba(62, 207, 142, 0.5);
+  background: rgba(62, 207, 142, 0.08);
+}
+
+.statLabel {
+  display: block;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+
+.statValue {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.statWin .statValue {
+  color: var(--success);
+}
+
+.freeSpinBanner {
+  margin-top: 8px;
+  padding: 6px 16px;
+  background: linear-gradient(90deg, rgba(107, 47, 160, 0.4), rgba(212, 168, 67, 0.3));
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--gold-bright);
+  display: inline-block;
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* ===== Reels ===== */
+.main {
+  flex: 1;
+  position: relative;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  min-height: 0;
+}
+
+.reelFrame {
+  width: 100%;
+  max-width: 480px;
+  padding: 4px;
+  background: linear-gradient(135deg, #8b6914, #d4a843, #8b6914);
+  border-radius: 16px;
+  box-shadow:
+    0 0 40px rgba(212, 168, 67, 0.2),
+    inset 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.reelFrameInner {
+  background: linear-gradient(180deg, #0c1428 0%, #080e1c 100%);
+  border-radius: 13px;
+  padding: 12px 10px;
+  position: relative;
+}
+
+.paylineIndicator {
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--gold-dim);
+  background: #0a0e1a;
+  padding: 2px 10px;
+  border-radius: 0 0 6px 6px;
+}
+
+.reelGrid {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.reel {
+  flex: 1;
+  max-width: 88px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+  border: 1px solid rgba(212, 168, 67, 0.15);
+  overflow: hidden;
+  position: relative;
+}
+
+.reelActive .reelStrip {
+  animation: reel-blur 0.12s linear infinite;
+}
+
+.reelStrip {
+  display: flex;
+  flex-direction: column;
+}
+
+.symbolCell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, rgba(20, 30, 50, 0.8) 0%, rgba(10, 15, 25, 0.9) 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.symbolCell:last-child {
+  border-bottom: none;
+}
+
+.symbolWin {
+  background: rgba(212, 168, 67, 0.2);
+  box-shadow: inset 0 0 12px rgba(212, 168, 67, 0.4);
+}
+
+.symbolEmoji {
+  font-size: clamp(1.6rem, 5vw, 2.2rem);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+  user-select: none;
+}
+
+@keyframes reel-blur {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-33%); }
+}
+
+/* ===== Win Banner ===== */
+.winBanner {
+  margin-top: 12px;
+  text-align: center;
+  padding: 10px 20px;
+  background: rgba(62, 207, 142, 0.1);
+  border: 1px solid rgba(62, 207, 142, 0.3);
+  border-radius: 12px;
+  animation: win-pop 0.4s ease-out;
+  max-width: 400px;
+  width: 100%;
+}
+
+.winBig {
+  border-color: var(--gold);
+  background: rgba(212, 168, 67, 0.12);
+}
+
+.winEpic {
+  border-color: var(--gold-bright);
+  background: rgba(240, 200, 90, 0.15);
+  box-shadow: 0 0 30px rgba(212, 168, 67, 0.3);
+}
+
+.winAmount {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--success);
+}
+
+.winEpic .winAmount,
+.winBig .winAmount {
+  color: var(--gold-bright);
+}
+
+.winDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 6px;
+}
+
+.winLine {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+.scatterWin {
+  font-size: 0.8rem;
+  color: var(--gold-bright);
+  margin-top: 4px;
+}
+
+/* ===== Controls ===== */
+.controls {
+  position: relative;
+  z-index: 10;
+  padding: 10px 16px 18px;
+  background: linear-gradient(0deg, rgba(4, 6, 14, 0.98) 0%, transparent 100%);
+}
+
+.controlLabel {
+  display: block;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+.betRow {
+  margin-bottom: 12px;
+}
+
+.betPresets {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.betBtn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.15s;
+}
+
+.betBtn:hover:not(:disabled) {
+  border-color: var(--gold-dim);
+}
+
+.betActive {
+  border-color: var(--gold);
+  background: rgba(212, 168, 67, 0.15);
+  color: var(--gold-bright);
+}
+
+.betAdjust {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.adjustBtn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.adjustBtn:disabled {
+  opacity: 0.3;
+}
+
+.betDisplay {
+  font-size: 1.1rem;
+  font-weight: 700;
+  min-width: 70px;
+  text-align: center;
+}
+
+.actionRow {
+  display: flex;
+  gap: 10px;
+}
+
+.spinBtn {
+  flex: 2;
+  padding: 16px;
+  border-radius: 14px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #2d8a5e 0%, #1a5c3e 100%);
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(45, 138, 94, 0.35);
+  transition: all 0.15s;
+}
+
+.spinBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(45, 138, 94, 0.45);
+}
+
+.spinBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.spinBtn.spinning {
+  background: linear-gradient(135deg, #1a5c3e, #0d3020);
+}
+
+.bonusBuyBtn {
+  flex: 1;
+  padding: 12px 8px;
+  border-radius: 14px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #6b2fa0 0%, #4a1f70 100%);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(107, 47, 160, 0.35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.bonusBuyBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.bonusBuyBtn:disabled {
+  opacity: 0.5;
+}
+
+.bonusBuyCost {
+  font-size: 0.65rem;
+  opacity: 0.85;
+}
+
+.paytableBtn {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 20;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(10, 16, 30, 0.9);
+  border: 1px solid rgba(212, 168, 67, 0.25);
+  color: var(--text-dim);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+/* ===== Overlays ===== */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(6px);
+}
+
+.freeSpinIntro {
+  text-align: center;
+  padding: 40px 36px;
+  background: linear-gradient(135deg, rgba(30, 20, 50, 0.95), rgba(12, 18, 32, 0.95));
+  border: 2px solid var(--gold);
+  border-radius: 20px;
+  animation: win-pop 0.5s ease-out;
+  max-width: 340px;
+}
+
+.introEmoji {
+  font-size: 3.5rem;
+  margin-bottom: 12px;
+}
+
+.freeSpinIntro h2 {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  color: var(--gold-bright);
+  margin-bottom: 8px;
+}
+
+.introCount {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.introSub {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+}
+
+.introTap {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.paytableModal {
+  background: var(--bg-panel);
+  border: 1px solid rgba(212, 168, 67, 0.3);
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 360px;
+  width: 100%;
+}
+
+.paytableModal h2 {
+  font-family: var(--font-display);
+  color: var(--gold-bright);
+  margin-bottom: 16px;
+  font-size: 1.2rem;
+}
+
+.paytableGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.payRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.payNote {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+}
+
+.closeBtn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(212, 168, 67, 0.15);
+  border: 1px solid var(--gold-dim);
+  color: var(--gold-bright);
+  font-weight: 600;
+}
+
+.errorToast {
+  position: fixed;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  background: var(--danger);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+@media (max-width: 400px) {
+  .logoText { font-size: 1.2rem; }
+  .reel { max-width: 68px; }
+  .symbolEmoji { font-size: 1.4rem; }
+  .actionRow { flex-direction: column; }
+  .bonusBuyBtn { flex: none; padding: 14px; }
+}

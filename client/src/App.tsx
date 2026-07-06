@@ -1,255 +1,183 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from './api';
 import { Header } from './components/Header';
-import { Chest } from './components/Chest';
+import { ReelGrid } from './components/ReelGrid';
 import { Controls } from './components/Controls';
-import { WinOverlay, LossOverlay } from './components/Overlays';
-import { BonusChoiceModal, BonusVault } from './components/BonusModal';
-import type {
-  GamePhase,
-  RiskMode,
-  RoundPublicView,
-  WinTier,
-} from './types';
-import styles from './components/Game.module.css';
-
-const OPEN_ANIMATION_MS = 1400;
+import { WinBanner, FreeSpinIntro, PaytableModal } from './components/WinDisplay';
+import type { GameState, SlotConfig, SpinResponse, SymbolId } from './types';
+import styles from './components/Slot.module.css';
 
 export default function App() {
+  const [config, setConfig] = useState<SlotConfig | null>(null);
   const [balance, setBalance] = useState(1000);
-  const [bet, setBet] = useState(10);
-  const [riskMode, setRiskMode] = useState<RiskMode>('medium');
-  const [round, setRound] = useState<RoundPublicView | null>(null);
-  const [phase, setPhase] = useState<GamePhase>('idle');
-  const [openingChest, setOpeningChest] = useState<number | null>(null);
-  const [openingBonusChest, setOpeningBonusChest] = useState<number | null>(null);
-  const [winOverlay, setWinOverlay] = useState<{ tier: WinTier; amount: number } | null>(null);
-  const [showLoss, setShowLoss] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [betPerLine, setBetPerLine] = useState(0.5);
+  const [grid, setGrid] = useState<SymbolId[][] | null>(null);
+  const [lastResult, setLastResult] = useState<SpinResponse | null>(null);
+  const [gameState, setGameState] = useState<GameState>('idle');
+  const [lastWin, setLastWin] = useState(0);
+  const [freeSpinSessionId, setFreeSpinSessionId] = useState<string | null>(null);
+  const [freeSpinsRemaining, setFreeSpinsRemaining] = useState(0);
+  const [showFreeSpinIntro, setShowFreeSpinIntro] = useState(false);
+  const [pendingFreeSpins, setPendingFreeSpins] = useState(0);
+  const [showPaytable, setShowPaytable] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const lastResultRef = useRef<SpinResponse | null>(null);
+  const autoSpinRef = useRef(false);
 
   useEffect(() => {
-    api.getBalance().then((r) => setBalance(r.balance)).catch(() => {});
+    Promise.all([api.getConfig(), api.getBalance()]).then(([cfg, bal]) => {
+      setConfig(cfg);
+      setBalance(bal.balance);
+      setBetPerLine(cfg.betPresets[2] ?? 0.5);
+    }).catch(() => {});
   }, []);
 
-  const resetToIdle = useCallback(() => {
-    setRound(null);
-    setPhase('idle');
-    setOpeningChest(null);
-    setOpeningBonusChest(null);
-    setWinOverlay(null);
-    setShowLoss(false);
+  const lineCount = config?.lineCount ?? 10;
+  const totalBet = betPerLine * lineCount;
+  const bonusBuyCost = totalBet * (config?.bonusBuyCostMultiplier ?? 100);
+
+  const doSpin = useCallback(async (useFreeSession: boolean) => {
+    setGameState('spinning');
+    setLastWin(0);
     setError(null);
+
+    try {
+      const result =
+        useFreeSession && freeSpinSessionId
+          ? await api.spin(betPerLine, freeSpinSessionId)
+          : await api.spin(betPerLine);
+
+      lastResultRef.current = result;
+      setGrid(result.grid);
+      setLastResult(result);
+      setBalance(result.balance);
+      setFreeSpinSessionId(result.freeSpinSessionId);
+      setFreeSpinsRemaining(result.freeSpinsRemaining);
+    } catch (err) {
+      setError((err as Error).message);
+      setGameState('idle');
+    }
+  }, [betPerLine, freeSpinSessionId]);
+
+  const onSpinComplete = useCallback(() => {
+    const result = lastResultRef.current;
+    if (!result) {
+      setGameState('idle');
+      return;
+    }
+
+    setLastWin(result.totalWin);
+    setGameState('showing_win');
+
+    if (result.freeSpinsAwarded > 0 && result.freeSpinsRemaining > 0) {
+      setPendingFreeSpins(result.freeSpinsAwarded);
+      setShowFreeSpinIntro(true);
+      return;
+    }
+
+    if (result.freeSpinsRemaining > 0) {
+      setTimeout(() => {
+        setGameState('idle');
+        autoSpinRef.current = true;
+      }, result.totalWin > 0 ? 1200 : 500);
+    } else {
+      setFreeSpinSessionId(null);
+      setFreeSpinsRemaining(0);
+      setTimeout(() => setGameState('idle'), result.totalWin > 0 ? 1800 : 400);
+    }
   }, []);
 
-  const handleStart = async () => {
-    setLoading(true);
+  useEffect(() => {
+    if (autoSpinRef.current && gameState === 'idle' && freeSpinsRemaining > 0 && freeSpinSessionId) {
+      autoSpinRef.current = false;
+      doSpin(true);
+    }
+  }, [gameState, freeSpinsRemaining, freeSpinSessionId, doSpin]);
+
+  const handleSpin = () => {
+    if (freeSpinsRemaining > 0 && freeSpinSessionId) {
+      doSpin(true);
+    } else {
+      doSpin(false);
+    }
+  };
+
+  const handleBonusBuy = async () => {
+    if (gameState === 'spinning') return;
+    setGameState('spinning');
+    setLastWin(0);
     setError(null);
+
     try {
-      const newRound = await api.startRound(bet, riskMode);
-      setRound(newRound);
-      setBalance(newRound.balance);
-      setPhase('playing');
+      const result = await api.bonusBuy(betPerLine);
+      lastResultRef.current = result;
+      setGrid(result.grid);
+      setLastResult(result);
+      setBalance(result.balance);
+      setFreeSpinSessionId(result.freeSpinSessionId);
+      setFreeSpinsRemaining(result.freeSpinsRemaining);
     } catch (err) {
       setError((err as Error).message);
-    } finally {
-      setLoading(false);
+      setGameState('idle');
     }
   };
 
-  const handlePickChest = async (index: number) => {
-    if (!round || phase !== 'playing' || openingChest !== null) return;
-
-    setOpeningChest(index);
-    setPhase('opening');
-
-    await new Promise((r) => setTimeout(r, OPEN_ANIMATION_MS));
-
-    setLoading(true);
-    try {
-      const result = await api.pickChest(round.roundId, index);
-      setRound(result.round);
-      setBalance(result.round.balance);
-
-      if (result.showBonusChoice) {
-        setPhase('bonus_choice');
-        setOpeningChest(null);
-        return;
-      }
-
-      if (result.pickedContent === 'curse') {
-        setPhase('lost');
-        setShowLoss(true);
-        await api.revealRemaining(round.roundId).catch(() => {});
-        return;
-      }
-
-      if (result.roundEnded && result.winAmount !== undefined && result.winTier) {
-        setPhase('won');
-        setWinOverlay({ tier: result.winTier, amount: result.winAmount });
-        await api.revealRemaining(round.roundId).catch(() => {});
-        return;
-      }
-
-      setPhase('playing');
-      setOpeningChest(null);
-    } catch (err) {
-      setError((err as Error).message);
-      setPhase('playing');
-      setOpeningChest(null);
-    } finally {
-      setLoading(false);
-    }
+  const handleFreeSpinIntroDismiss = () => {
+    setShowFreeSpinIntro(false);
+    setGameState('idle');
+    autoSpinRef.current = true;
   };
 
-  const handleCashOut = async () => {
-    if (!round) return;
-    setLoading(true);
-    try {
-      const result = await api.cashOut(round.roundId);
-      setRound(result.round);
-      setBalance(result.round.balance);
-      setPhase('won');
-      setWinOverlay({ tier: result.winTier, amount: result.winAmount });
-      await api.revealRemaining(round.roundId).catch(() => {});
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleTakeBonusWin = async () => {
-    if (!round) return;
-    setLoading(true);
-    try {
-      const result = await api.declineBonus(round.roundId);
-      setRound(result.round);
-      setBalance(result.round.balance);
-      setPhase('won');
-      setWinOverlay({ tier: result.winTier, amount: result.winAmount });
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEnterBonus = async () => {
-    if (!round) return;
-    setLoading(true);
-    try {
-      const updated = await api.acceptBonus(round.roundId);
-      setRound(updated);
-      setPhase('bonus_pick');
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleBonusPick = async (index: number) => {
-    if (!round) return;
-    setOpeningBonusChest(index);
-    await new Promise((r) => setTimeout(r, OPEN_ANIMATION_MS));
-
-    setLoading(true);
-    try {
-      const result = await api.pickBonusChest(round.roundId, index);
-      setRound(result.round);
-      setBalance(result.round.balance);
-
-      if (result.result === 'curse') {
-        setPhase('lost');
-        setShowLoss(true);
-        setOpeningBonusChest(null);
-        return;
-      }
-
-      if (result.roundEnded && result.winAmount !== undefined && result.winTier) {
-        setPhase('won');
-        setWinOverlay({ tier: result.winTier, amount: result.winAmount });
-        setOpeningBonusChest(null);
-        return;
-      }
-
-      setPhase('playing');
-      setOpeningBonusChest(null);
-    } catch (err) {
-      setError((err as Error).message);
-      setOpeningBonusChest(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const multiplier = round?.multiplier ?? 1;
-  const potentialWin = round?.potentialWin ?? bet;
-  const hasActiveRound = round !== null && ['playing', 'opening', 'bonus_choice', 'bonus_pick'].includes(phase);
+  const winningLines = lastResult?.lineWins.map((w) => w.lineIndex) ?? [];
 
   return (
     <div className={styles.game}>
-      <div className={styles.background}>
-        <div className={styles.caveGlow} />
-        <div className={styles.krakenEye1} />
-        <div className={styles.krakenEye2} />
-        <div className={styles.curseMist} />
-      </div>
+      <div className={styles.bgOcean} />
+      <div className={styles.bgShip} />
 
       <Header
         balance={balance}
-        multiplier={multiplier}
-        potentialWin={potentialWin}
-        bet={round?.bet ?? 0}
+        lastWin={lastWin}
+        totalBet={totalBet}
+        freeSpinsRemaining={freeSpinsRemaining}
+        isFreeSpin={freeSpinsRemaining > 0}
       />
 
-      <main className={styles.arena}>
-        {phase === 'bonus_pick' ? (
-          <BonusVault
-            onPick={handleBonusPick}
-            disabled={loading}
-            openingIndex={openingBonusChest}
-          />
-        ) : (
-          <div className={styles.chestGrid}>
-            {(round?.chests ?? Array.from({ length: 5 }, (_, i) => ({ index: i, opened: false as const }))).map(
-              (chest) => (
-                <Chest
-                  key={chest.index}
-                  index={chest.index}
-                  opened={chest.opened}
-                  content={'content' in chest ? chest.content : undefined}
-                  isOpening={openingChest === chest.index}
-                  isSelected={false}
-                  disabled={!hasActiveRound || phase === 'opening' || loading || phase === 'bonus_choice'}
-                  onClick={() => handlePickChest(chest.index)}
-                />
-              )
-            )}
-          </div>
-        )}
+      <main className={styles.main}>
+        <ReelGrid
+          grid={grid}
+          spinning={gameState === 'spinning'}
+          winningLines={winningLines}
+          symbols={config?.symbols ?? []}
+          onSpinComplete={onSpinComplete}
+        />
 
-        {phase === 'idle' && (
-          <div className={styles.idleMessage}>
-            <p>Open treasure chests. Build your multiplier.</p>
-            <p className={styles.idleSub}>Cash out before the curse finds you.</p>
-          </div>
-        )}
+        <WinBanner
+          lineWins={lastResult?.lineWins ?? []}
+          scatterCount={lastResult?.scatterCount ?? 0}
+          scatterPayout={lastResult?.scatterPayout ?? 0}
+          totalWin={lastWin}
+          visible={gameState === 'showing_win'}
+        />
       </main>
 
+      <button className={styles.paytableBtn} onClick={() => setShowPaytable(true)}>
+        Paytable
+      </button>
+
       <Controls
-        bet={bet}
-        potentialWin={potentialWin}
-        riskMode={riskMode}
-        disabled={loading || phase === 'opening' || phase === 'bonus_pick'}
-        canCashOut={round?.canCashOut ?? false}
-        canPick={round?.canPick ?? false}
-        hasActiveRound={hasActiveRound}
-        onBetChange={setBet}
-        onRiskChange={setRiskMode}
-        onStart={handleStart}
-        onCashOut={handleCashOut}
+        betPerLine={betPerLine}
+        lineCount={lineCount}
+        betPresets={config?.betPresets ?? [0.1, 0.5, 1, 2, 5]}
+        minBet={config?.minBetPerLine ?? 0.1}
+        maxBet={config?.maxBetPerLine ?? 10}
+        bonusBuyCost={bonusBuyCost}
+        spinning={gameState === 'spinning'}
+        isFreeSpin={freeSpinsRemaining > 0}
+        freeSpinsRemaining={freeSpinsRemaining}
+        onBetChange={setBetPerLine}
+        onSpin={handleSpin}
+        onBonusBuy={handleBonusBuy}
       />
 
       {error && (
@@ -258,24 +186,11 @@ export default function App() {
         </div>
       )}
 
-      {phase === 'bonus_choice' && round && (
-        <BonusChoiceModal
-          currentWin={round.potentialWin}
-          onTakeWin={handleTakeBonusWin}
-          onEnterBonus={handleEnterBonus}
-          disabled={loading}
-        />
+      {showFreeSpinIntro && (
+        <FreeSpinIntro count={pendingFreeSpins} onDismiss={handleFreeSpinIntroDismiss} />
       )}
 
-      {winOverlay && (
-        <WinOverlay
-          tier={winOverlay.tier}
-          amount={winOverlay.amount}
-          onDismiss={resetToIdle}
-        />
-      )}
-
-      {showLoss && <LossOverlay onDismiss={resetToIdle} />}
+      <PaytableModal open={showPaytable} onClose={() => setShowPaytable(false)} />
     </div>
   );
 }
