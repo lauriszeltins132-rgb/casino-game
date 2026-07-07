@@ -4,192 +4,60 @@ import {
   createProvablyFairState,
   fairRandomInt,
 } from '../rng/provablyFair.js';
-import type { ProvablyFairState } from '../types/index.js';
-import { generateBonusBuyGrid, spinReels } from '../math/reels.js';
+import {
+  BASE_REEL_STRIPS,
+  FREE_SPIN_REEL_STRIPS,
+  generateBonusBuyGrid,
+  generateInkOrbs,
+  spinReels,
+} from '../math/reels.js';
 import { evaluateGrid } from '../math/paylines.js';
 import {
-  BONUS_BUY_MULTIPLIER,
-  BONUS_CHEST_COUNT,
-  BONUS_PICKS,
+  BONUS_BUY_TIERS,
   BET_OPTIONS,
   DEMO_BALANCE,
   LINE_COUNT,
+  MAX_FREE_SPINS,
+  MAX_WIN_MULTIPLIER,
   PAYLINES,
   PAYTABLE,
-  SCATTER_BONUS_TRIGGER,
-  SCATTER_PAY,
+  SCATTER_AWARDS,
   TARGET_RTP,
-  RAGE_MULTIPLIERS,
-  RAGE_THRESHOLDS,
+  HIT_FREQUENCY,
 } from '../math/config.js';
 import type {
-  BonusChestOutcome,
-  BonusPickResult,
-  BonusState,
+  BonusBuyTier,
+  FreeSpinState,
   GameConfig,
+  InkOrb,
+  ProvablyFairState,
   SpinResult,
   SymbolId,
 } from '../types/index.js';
 
+interface FreeSpinSession {
+  id: string;
+  totalBet: number;
+  remaining: number;
+  totalAwarded: number;
+  sessionWin: number;
+  orbWeightTier: 'standard' | 'premium';
+  seededOrbsRemaining: InkOrb[];
+  spinNumber: number;
+}
+
 let balance = DEMO_BALANCE;
 let pfState: ProvablyFairState = createProvablyFairState();
-const activeBonuses = new Map<string, BonusState>();
-
-const CHEST_OUTCOME_WEIGHTS: [BonusChestOutcome, number][] = [
-  ['gold_coins', 35],
-  ['multiplier_x2', 18],
-  ['multiplier_x3', 12],
-  ['multiplier_x5', 6],
-  ['kraken_rage', 10],
-  ['ancient_relic', 12],
-  ['multiplier_x10', 3],
-  ['jackpot', 4],
-];
-
-function weightedOutcome(pf: ProvablyFairState): { outcome: BonusChestOutcome; nonce: number } {
-  const total = CHEST_OUTCOME_WEIGHTS.reduce((s, [, w]) => s + w, 0);
-  const r = fairRandomInt(pf, total);
-  advanceNonce(pf, r.nonce);
-  let cumulative = 0;
-  for (const [outcome, weight] of CHEST_OUTCOME_WEIGHTS) {
-    cumulative += weight;
-    if (r.value < cumulative) return { outcome, nonce: r.nonce };
-  }
-  return { outcome: 'gold_coins', nonce: r.nonce };
-}
-
-function shuffleIndices(pf: ProvablyFairState, count: number): number[] {
-  const arr = Array.from({ length: count }, (_, i) => i);
-  for (let i = arr.length - 1; i > 0; i--) {
-    const r = fairRandomInt(pf, i + 1);
-    advanceNonce(pf, r.nonce);
-    [arr[i], arr[r.value]] = [arr[r.value], arr[i]];
-  }
-  return arr;
-}
-
-function createBonus(bet: number): BonusState {
-  const outcomes: BonusChestOutcome[] = [];
-  for (let i = 0; i < BONUS_CHEST_COUNT; i++) {
-    const { outcome, nonce } = weightedOutcome(pfState);
-    outcomes.push(outcome);
-  }
-
-  const shuffled = shuffleIndices(pfState, BONUS_CHEST_COUNT);
-  const chests = shuffled.map((originalIndex, displayIndex) => ({
-    index: displayIndex,
-    picked: false,
-    outcome: outcomes[originalIndex],
-  }));
-
-  return {
-    id: uuidv4(),
-    bet,
-    chests,
-    picksRemaining: BONUS_PICKS,
-    totalPicks: BONUS_PICKS,
-    rageMeter: 0,
-    rageLevel: 0,
-    rageMultiplier: 1,
-    relicsCollected: 0,
-    totalWin: 0,
-    activeMultiplier: 1,
-    completed: false,
-  };
-}
-
-function getRageLevel(meter: number): number {
-  if (meter >= RAGE_THRESHOLDS[2]) return 3;
-  if (meter >= RAGE_THRESHOLDS[1]) return 2;
-  if (meter >= RAGE_THRESHOLDS[0]) return 1;
-  return 0;
-}
-
-function fairBonusValue(pf: ProvablyFairState, min: number, max: number): number {
-  const r = fairRandomInt(pf, max - min + 1);
-  advanceNonce(pf, r.nonce);
-  return min + r.value;
-}
-
-function resolveChestPayoutFair(
-  outcome: BonusChestOutcome,
-  bet: number,
-  rageMultiplier: number,
-  activeMultiplier: number,
-  pf: ProvablyFairState
-): { payout: number; extraPicks: number; newActiveMultiplier: number; relics: number; nonce: number } {
-  const mult = rageMultiplier * activeMultiplier;
-  let lastNonce = pf.nonce;
-
-  switch (outcome) {
-    case 'gold_coins': {
-      const v = fairBonusValue(pf, 50, 300) / 100;
-      lastNonce = pf.nonce;
-      return { payout: bet * v * mult, extraPicks: 0, newActiveMultiplier: activeMultiplier, relics: 0, nonce: lastNonce };
-    }
-    case 'multiplier_x2':
-      return { payout: bet * 1 * mult, extraPicks: 0, newActiveMultiplier: activeMultiplier * 2, relics: 0, nonce: pf.nonce };
-    case 'multiplier_x3':
-      return { payout: bet * 2 * mult, extraPicks: 0, newActiveMultiplier: activeMultiplier * 3, relics: 0, nonce: pf.nonce };
-    case 'multiplier_x5':
-      return { payout: bet * 4 * mult, extraPicks: 0, newActiveMultiplier: activeMultiplier * 5, relics: 0, nonce: pf.nonce };
-    case 'multiplier_x10':
-      return { payout: bet * 8 * mult, extraPicks: 0, newActiveMultiplier: activeMultiplier * 10, relics: 0, nonce: pf.nonce };
-    case 'kraken_rage':
-      return { payout: bet * 0.5 * mult, extraPicks: 2, newActiveMultiplier: activeMultiplier, relics: 0, nonce: pf.nonce };
-    case 'ancient_relic':
-      return { payout: bet * 1.5 * mult, extraPicks: 0, newActiveMultiplier: activeMultiplier, relics: 1, nonce: pf.nonce };
-    case 'jackpot': {
-      const v = fairBonusValue(pf, 20, 100);
-      lastNonce = pf.nonce;
-      return { payout: bet * v * mult, extraPicks: 0, newActiveMultiplier: activeMultiplier, relics: 0, nonce: lastNonce };
-    }
-  }
-}
+const fsSessions = new Map<string, FreeSpinSession>();
 
 export function getBalance(): number {
   return balance;
 }
 
-export function setBalance(amount: number): void {
-  balance = amount;
-}
-
 export function resetDemo(): void {
   balance = DEMO_BALANCE;
   pfState = createProvablyFairState();
-  activeBonuses.clear();
-}
-
-export function getConfig(): GameConfig {
-  return {
-    paylines: PAYLINES,
-    lineCount: LINE_COUNT,
-    reelCount: 5,
-    rowCount: 3,
-    symbols: [
-      { id: 'crown', name: 'Kraken Crown', tier: 'high' },
-      { id: 'trident', name: 'Ancient Trident', tier: 'high' },
-      { id: 'chest', name: 'Treasure Chest', tier: 'high' },
-      { id: 'pearl', name: 'Diamond Pearl', tier: 'high' },
-      { id: 'anchor', name: 'Silver Anchor', tier: 'low' },
-      { id: 'compass', name: 'Pirate Compass', tier: 'low' },
-      { id: 'map', name: 'Ancient Map', tier: 'low' },
-      { id: 'coin', name: 'Golden Coin', tier: 'low' },
-      { id: 'wild', name: 'Kraken Tentacle', tier: 'special' },
-      { id: 'scatter', name: 'Kraken Eye', tier: 'special' },
-    ],
-    paytable: PAYTABLE,
-    scatterPay: SCATTER_PAY,
-    scatterBonusTrigger: SCATTER_BONUS_TRIGGER,
-    bonusBuyMultiplier: BONUS_BUY_MULTIPLIER,
-    targetRtp: TARGET_RTP,
-    volatility: 'medium-high',
-    betOptions: BET_OPTIONS,
-    demoBalance: DEMO_BALANCE,
-    bonusPicks: BONUS_PICKS,
-    bonusChestCount: BONUS_CHEST_COUNT,
-  };
+  fsSessions.clear();
 }
 
 export function getProvablyFair() {
@@ -204,20 +72,158 @@ export function setClientSeed(seed: string): void {
   pfState.clientSeed = seed;
 }
 
-function buildSpinResult(
-  grid: SymbolId[][],
-  bet: number,
-  nonce: number,
-  bonusId?: string
-): SpinResult & { bonusId?: string } {
-  const eval_ = evaluateGrid(grid, bet);
-  balance += eval_.totalWin;
+export function getConfig(): GameConfig {
+  return {
+    paylines: PAYLINES,
+    lineCount: LINE_COUNT,
+    symbols: [
+      { id: 'rope', name: 'Rope Coil', tier: 'low' },
+      { id: 'barnacle', name: 'Barnacle Cluster', tier: 'low' },
+      { id: 'anchor_chain', name: 'Anchor Chain', tier: 'low' },
+      { id: 'wheel', name: "Ship's Wheel", tier: 'low' },
+      { id: 'compass', name: 'Brass Compass', tier: 'mid' },
+      { id: 'spyglass', name: 'Spyglass', tier: 'mid' },
+      { id: 'map', name: 'Treasure Map', tier: 'mid' },
+      { id: 'bell', name: "Ship's Bell", tier: 'mid' },
+      { id: 'skull', name: 'Golden Idol Skull', tier: 'high' },
+      { id: 'crown', name: 'Sunken Crown', tier: 'high' },
+      { id: 'chest', name: 'Treasure Chest', tier: 'high' },
+      { id: 'wild', name: "Kraken's Eye", tier: 'special' },
+      { id: 'scatter', name: 'The Kraken', tier: 'special' },
+    ],
+    paytable: PAYTABLE,
+    scatterAwards: SCATTER_AWARDS,
+    bonusBuyTiers: BONUS_BUY_TIERS.map((t) => ({
+      id: t.id,
+      name: t.name,
+      costMultiplier: t.costMultiplier,
+      spins: t.spins,
+      seededOrbs: t.seededOrbs,
+      description: t.description,
+    })),
+    targetRtp: TARGET_RTP,
+    hitFrequency: HIT_FREQUENCY,
+    volatility: 'medium-high',
+    betOptions: BET_OPTIONS,
+    demoBalance: DEMO_BALANCE,
+    maxFreeSpins: MAX_FREE_SPINS,
+    maxWinMultiplier: MAX_WIN_MULTIPLIER,
+  };
+}
 
-  let bonusIdOut = bonusId;
-  if (eval_.bonusTriggered && !bonusId) {
-    const bonus = createBonus(bet);
-    activeBonuses.set(bonus.id, bonus);
-    bonusIdOut = bonus.id;
+function capWin(totalBet: number, win: number): number {
+  return Math.min(win, totalBet * MAX_WIN_MULTIPLIER);
+}
+
+function toFreeSpinState(session: FreeSpinSession): FreeSpinState {
+  return {
+    sessionId: session.id,
+    remaining: session.remaining,
+    totalAwarded: session.totalAwarded,
+    sessionWin: session.sessionWin,
+    retriggered: 0,
+  };
+}
+
+function rollOrbCount(pf: ProvablyFairState): number {
+  const weights = [0, 35, 45, 20];
+  const total = weights.reduce((a, b) => a + b, 0);
+  const r = fairRandomInt(pf, total);
+  advanceNonce(pf, r.nonce);
+  let cum = 0;
+  for (let i = 0; i < weights.length; i++) {
+    cum += weights[i];
+    if (r.value < cum) return i;
+  }
+  return 1;
+}
+
+function applyInkOrbs(baseWin: number, orbs: InkOrb[], isFreeSpin: boolean) {
+  if (!isFreeSpin || baseWin <= 0 || orbs.length === 0) {
+    return { totalWin: baseWin, orbMultiplier: 1 };
+  }
+  const orbSum = orbs.reduce((s, o) => s + o.value, 0);
+  return { totalWin: baseWin * orbSum, orbMultiplier: orbSum };
+}
+
+function buildResult(
+  grid: SymbolId[][],
+  totalBet: number,
+  nonce: number,
+  isFreeSpin: boolean,
+  session: FreeSpinSession | null,
+  betDeducted: number
+): SpinResult {
+  const eval_ = evaluateGrid(grid, totalBet);
+  let inkOrbs: InkOrb[] = [];
+
+  if (isFreeSpin && session) {
+    session.spinNumber++;
+
+    if (session.seededOrbsRemaining.length > 0 && session.spinNumber === 1) {
+      inkOrbs = [...session.seededOrbsRemaining];
+      session.seededOrbsRemaining = [];
+    }
+
+    if (eval_.linePayout > 0) {
+      const count = rollOrbCount(pfState);
+      if (count > 0) {
+        const occupied = new Set(inkOrbs.map((o) => `${o.row}-${o.col}`));
+        const { orbs, nonce: n } = generateInkOrbs(
+          pfState,
+          count,
+          session.orbWeightTier === 'premium',
+          occupied
+        );
+        inkOrbs = [...inkOrbs, ...orbs];
+        advanceNonce(pfState, n);
+      }
+    }
+  }
+
+  const { totalWin: rawWin, orbMultiplier } = applyInkOrbs(
+    eval_.baseWin,
+    inkOrbs,
+    isFreeSpin
+  );
+  const totalWin = capWin(totalBet, rawWin);
+  balance += totalWin;
+
+  let freeSpinsAwarded = 0;
+  let freeSpinState: FreeSpinState | null = session ? toFreeSpinState(session) : null;
+
+  if (!isFreeSpin && eval_.freeSpinsAwarded > 0) {
+    freeSpinsAwarded = eval_.freeSpinsAwarded;
+    const newSession: FreeSpinSession = {
+      id: uuidv4(),
+      totalBet,
+      remaining: eval_.freeSpinsAwarded,
+      totalAwarded: eval_.freeSpinsAwarded,
+      sessionWin: 0,
+      orbWeightTier: 'standard',
+      seededOrbsRemaining: [],
+      spinNumber: 0,
+    };
+    fsSessions.set(newSession.id, newSession);
+    freeSpinState = toFreeSpinState(newSession);
+  } else if (isFreeSpin && session) {
+    session.sessionWin += totalWin;
+
+    if (eval_.scatterCount >= 2) {
+      const extra = Math.min(eval_.retriggerSpins, MAX_FREE_SPINS - session.totalAwarded);
+      if (extra > 0) {
+        session.remaining += extra;
+        session.totalAwarded += extra;
+        freeSpinsAwarded = extra;
+      }
+    }
+
+    if (session.remaining <= 0) {
+      fsSessions.delete(session.id);
+      freeSpinState = null;
+    } else {
+      freeSpinState = toFreeSpinState(session);
+    }
   }
 
   return {
@@ -226,91 +232,103 @@ function buildSpinResult(
     scatterCount: eval_.scatterCount,
     scatterPayout: eval_.scatterPayout,
     linePayout: eval_.linePayout,
-    totalWin: eval_.totalWin,
-    bonusTriggered: eval_.bonusTriggered,
+    inkOrbs,
+    orbMultiplier,
+    totalWin,
     balance,
-    bet,
+    bet: betDeducted,
+    lineBet: eval_.lineBet,
+    freeSpinsAwarded,
+    freeSpinState,
+    isFreeSpin,
+    anticipation: eval_.anticipation,
+    mode: isFreeSpin ? 'freespin' : 'base',
     nonce,
     serverSeedHash: pfState.serverSeedHash,
     clientSeed: pfState.clientSeed,
-    bonusId: bonusIdOut,
   };
 }
 
-export function spin(bet: number): SpinResult & { bonusId?: string } {
-  if (!BET_OPTIONS.includes(bet)) throw new Error('Invalid bet amount');
-  if (bet > balance) throw new Error('Insufficient balance');
+export function spin(totalBet: number, sessionId?: string): SpinResult {
+  if (!BET_OPTIONS.includes(totalBet)) throw new Error('Invalid bet amount');
 
-  balance -= bet;
-  const { grid, nonce } = spinReels(pfState);
-  return buildSpinResult(grid, bet, nonce);
-}
+  const session = sessionId ? fsSessions.get(sessionId) ?? null : null;
+  const isFreeSpin = session !== null && session.remaining > 0;
+  let betDeducted = 0;
 
-export function bonusBuy(bet: number): SpinResult & { bonusId?: string } {
-  if (!BET_OPTIONS.includes(bet)) throw new Error('Invalid bet amount');
-  const cost = bet * BONUS_BUY_MULTIPLIER;
-  if (cost > balance) throw new Error('Insufficient balance for bonus buy');
-
-  balance -= cost;
-  const { grid, nonce } = generateBonusBuyGrid(pfState);
-  return buildSpinResult(grid, bet, nonce);
-}
-
-export function getBonus(id: string): BonusState | undefined {
-  return activeBonuses.get(id);
-}
-
-export function pickBonusChest(bonusId: string, chestIndex: number): BonusPickResult {
-  const bonus = activeBonuses.get(bonusId);
-  if (!bonus) throw new Error('Bonus not found');
-  if (bonus.completed) throw new Error('Bonus already completed');
-  if (bonus.picksRemaining <= 0) throw new Error('No picks remaining');
-  if (chestIndex < 0 || chestIndex >= bonus.chests.length) throw new Error('Invalid chest');
-  const chest = bonus.chests[chestIndex];
-  if (chest.picked) throw new Error('Chest already picked');
-
-  chest.picked = true;
-  bonus.picksRemaining -= 1;
-  bonus.rageMeter += 1;
-
-  const prevLevel = bonus.rageLevel;
-  bonus.rageLevel = getRageLevel(bonus.rageMeter);
-  bonus.rageMultiplier = bonus.rageLevel > 0 ? RAGE_MULTIPLIERS[bonus.rageLevel - 1] : 1;
-
-  const outcome = chest.outcome!;
-  const resolved = resolveChestPayoutFair(
-    outcome,
-    bonus.bet,
-    bonus.rageMultiplier,
-    bonus.activeMultiplier,
-    pfState
-  );
-
-  bonus.activeMultiplier = resolved.newActiveMultiplier;
-  bonus.relicsCollected += resolved.relics;
-  bonus.picksRemaining += resolved.extraPicks;
-  chest.payout = resolved.payout;
-  bonus.totalWin += resolved.payout;
-  balance += resolved.payout;
-
-  if (bonus.picksRemaining <= 0) {
-    bonus.completed = true;
-    // Relic collection bonus
-    if (bonus.relicsCollected >= 3) {
-      const relicBonus = bonus.bet * 10 * bonus.relicsCollected;
-      bonus.totalWin += relicBonus;
-      balance += relicBonus;
-    }
+  if (!isFreeSpin) {
+    if (totalBet > balance) throw new Error('Insufficient balance');
+    balance -= totalBet;
+    betDeducted = totalBet;
+  } else {
+    totalBet = session!.totalBet;
+    session!.remaining -= 1;
   }
 
-  return {
-    bonus: { ...bonus, chests: bonus.chests.map((c) => ({ ...c })) },
-    outcome,
-    payout: resolved.payout,
-    balance,
-    rageLevelUp: bonus.rageLevel > prevLevel,
-    extraPicks: resolved.extraPicks,
-  };
+  const strips = isFreeSpin ? FREE_SPIN_REEL_STRIPS : BASE_REEL_STRIPS;
+  const { grid, nonce } = spinReels(pfState, strips);
+  return buildResult(grid, totalBet, nonce, isFreeSpin, session, betDeducted);
 }
 
-// resolveChestPayoutFair used instead of resolveChestPayout
+export function bonusBuy(totalBet: number, tier: BonusBuyTier): SpinResult {
+  if (!BET_OPTIONS.includes(totalBet)) throw new Error('Invalid bet amount');
+
+  const tierConfig = BONUS_BUY_TIERS.find((t) => t.id === tier);
+  if (!tierConfig) throw new Error('Invalid bonus buy tier');
+
+  const cost = totalBet * tierConfig.costMultiplier;
+  if (cost > balance) throw new Error('Insufficient balance');
+
+  balance -= cost;
+
+  const { grid, nonce } = generateBonusBuyGrid(pfState, 3);
+  const eval_ = evaluateGrid(grid, totalBet);
+  const scatterPayout = totalBet * SCATTER_AWARDS[3].payMultiplier;
+  const baseWin = eval_.linePayout + scatterPayout;
+  balance += baseWin;
+
+  let seededOrbs: InkOrb[] = [];
+  if (tierConfig.seededOrbs > 0) {
+    const { orbs, nonce: n } = generateInkOrbs(
+      pfState,
+      tierConfig.seededOrbs,
+      tierConfig.orbWeightTier === 'premium'
+    );
+    seededOrbs = orbs;
+    advanceNonce(pfState, n);
+  }
+
+  const session: FreeSpinSession = {
+    id: uuidv4(),
+    totalBet,
+    remaining: tierConfig.spins,
+    totalAwarded: tierConfig.spins,
+    sessionWin: baseWin,
+    orbWeightTier: tierConfig.orbWeightTier,
+    seededOrbsRemaining: seededOrbs,
+    spinNumber: 0,
+  };
+  fsSessions.set(session.id, session);
+
+  return {
+    grid,
+    lineWins: eval_.lineWins,
+    scatterCount: 3,
+    scatterPayout,
+    linePayout: eval_.linePayout,
+    inkOrbs: [],
+    orbMultiplier: 1,
+    totalWin: baseWin,
+    balance,
+    bet: cost,
+    lineBet: totalBet / LINE_COUNT,
+    freeSpinsAwarded: tierConfig.spins,
+    freeSpinState: toFreeSpinState(session),
+    isFreeSpin: false,
+    anticipation: true,
+    mode: 'base',
+    nonce,
+    serverSeedHash: pfState.serverSeedHash,
+    clientSeed: pfState.clientSeed,
+  };
+}

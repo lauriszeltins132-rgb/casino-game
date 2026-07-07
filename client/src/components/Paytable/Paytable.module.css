@@ -63,6 +63,13 @@
   font-variant-numeric: tabular-nums;
 }
 
+.fsNote {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
 .close {
   width: 100%;
   padding: 12px;

@@ -1,17 +1,17 @@
-import type { GameConfig } from '../../types';
+import type { GameConfig, SymbolId } from '../../types';
 import { SymbolIcon } from '../../assets/symbols';
-import type { SymbolId } from '../../types';
 import styles from './Paytable.module.css';
+
+const ORDER: SymbolId[] = [
+  'rope', 'barnacle', 'anchor_chain', 'wheel', 'compass', 'spyglass',
+  'map', 'bell', 'skull', 'crown', 'chest', 'wild', 'scatter',
+];
 
 interface Props {
   config: GameConfig;
   open: boolean;
   onClose: () => void;
 }
-
-const ORDER: SymbolId[] = [
-  'crown', 'trident', 'chest', 'pearl', 'anchor', 'compass', 'map', 'coin', 'wild', 'scatter',
-];
 
 export function Paytable({ config, open, onClose }: Props) {
   if (!open) return null;
@@ -20,8 +20,11 @@ export function Paytable({ config, open, onClose }: Props) {
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <h2>Paytable</h2>
-        <p className={styles.note}>20 paylines · Wins = bet × multiplier · RTP {config.targetRtp * 100}%</p>
-
+        <p className={styles.note}>
+          20 lines · Pays left-to-right · 3+ matching · Per line bet = total bet ÷ 20
+          <br />
+          RTP {config.targetRtp * 100}% target · Hit freq {config.hitFrequency} · {config.volatility}
+        </p>
         <div className={styles.table}>
           {ORDER.map((id) => {
             const sym = config.symbols.find((s) => s.id === id);
@@ -29,22 +32,32 @@ export function Paytable({ config, open, onClose }: Props) {
             return (
               <div key={id} className={styles.row}>
                 <div className={styles.sym}>
-                  <SymbolIcon id={id} size={40} />
+                  <SymbolIcon id={id} size={36} />
                   <span>{sym?.name}</span>
                 </div>
                 <div className={styles.pays}>
                   {id === 'scatter' ? (
-                    <span>3={config.scatterPay[3]}× · 4=Bonus+{config.scatterPay[4]}× · 5={config.scatterPay[5]}×</span>
+                    <span>
+                      3: {config.scatterAwards[3]?.spins} FS + {config.scatterAwards[3]?.payMultiplier}x
+                      {' · '}
+                      4: {config.scatterAwards[4]?.spins} FS + {config.scatterAwards[4]?.payMultiplier}x
+                      {' · '}
+                      5: {config.scatterAwards[5]?.spins} FS + {config.scatterAwards[5]?.payMultiplier}x
+                    </span>
+                  ) : id === 'wild' ? (
+                    <span>Substitutes · 5-kind = 100x line bet</span>
                   ) : (
-                    <span>{pays[0]}× / {pays[1]}× / {pays[2]}×</span>
+                    <span>3x={pays[0]} · 4x={pays[1]} · 5x={pays[2]}</span>
                   )}
                 </div>
               </div>
             );
           })}
         </div>
-
-        <button className={styles.close} onClick={onClose}>Close</button>
+        <p className={styles.fsNote}>
+          Free Spins: Ink Orbs (2x–50x) drop on winning spins. Orb values sum and multiply that spin&apos;s win.
+        </p>
+        <button type="button" className={styles.close} onClick={onClose}>Close</button>
       </div>
     </div>
   );

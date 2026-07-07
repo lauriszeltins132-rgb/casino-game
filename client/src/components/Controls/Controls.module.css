@@ -1,156 +1,122 @@
 .controls {
   position: relative;
   z-index: 10;
-  padding: 12px 16px 24px;
-  background: linear-gradient(0deg, rgba(4, 8, 16, 0.98) 0%, transparent 100%);
+  padding: 10px 16px 22px;
+  background: linear-gradient(0deg, rgba(5,11,20,0.98), transparent);
 }
 
 .label {
   display: block;
-  font-size: 0.6rem;
+  font-size: 0.55rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: var(--text-dim);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   text-align: center;
 }
 
-.betRow {
-  margin-bottom: 14px;
-}
+.betRow { margin-bottom: 12px; }
 
 .betOptions {
   display: flex;
-  gap: 6px;
+  gap: 5px;
   flex-wrap: wrap;
   justify-content: center;
 }
 
 .betBtn {
-  padding: 8px 14px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 7px 11px;
+  border-radius: 6px;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(139,115,85,0.3);
   color: var(--text);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  transition: all 0.15s;
-  min-width: 52px;
-}
-
-.betBtn:hover:not(:disabled) {
-  border-color: rgba(201, 162, 39, 0.4);
-  background: rgba(201, 162, 39, 0.08);
 }
 
 .betActive {
-  border-color: var(--gold);
-  background: rgba(201, 162, 39, 0.15);
-  color: var(--gold);
-  box-shadow: 0 0 12px rgba(201, 162, 39, 0.2);
+  border-color: #FFC94A;
+  color: #FFC94A;
+  box-shadow: 0 0 10px rgba(255,201,74,0.2);
 }
 
-.betBtn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
+.betBtn:disabled { opacity: 0.4; }
 
 .actions {
   display: flex;
   gap: 8px;
-  align-items: stretch;
 }
 
 .autoBtn {
-  flex: 0 0 72px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  flex: 0 0 64px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(139,115,85,0.3);
   color: var(--text-dim);
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  font-size: 0.65rem;
+  font-weight: 800;
 }
 
-.autoActive {
-  border-color: var(--emerald);
-  color: var(--emerald);
-  background: rgba(46, 204, 113, 0.1);
+.autoOn {
+  border-color: #1FE3B4;
+  color: #1FE3B4;
 }
 
 .spinBtn {
   flex: 2;
-  border-radius: 14px;
-  font-size: 1.15rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
   font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  background: linear-gradient(180deg, #2ecc71 0%, #1a8a4a 100%);
-  color: #fff;
-  box-shadow:
-    0 4px 0 #0d5c30,
-    0 6px 24px rgba(46, 204, 113, 0.35);
-  transition: transform 0.1s, box-shadow 0.1s;
+  letter-spacing: 0.12em;
+  background: linear-gradient(180deg, #1FE3B4 0%, #0A6A50 100%);
+  color: #050B14;
+  box-shadow: 0 4px 0 #064030, 0 6px 20px rgba(31,227,180,0.3);
 }
 
-.spinBtn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 5px 0 #0d5c30, 0 8px 28px rgba(46, 204, 113, 0.45);
-}
+.spinBtn:disabled { opacity: 0.5; }
 
-.spinBtn:active:not(:disabled) {
-  transform: translateY(2px);
-  box-shadow: 0 2px 0 #0d5c30;
-}
-
-.spinBtn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.spinBtn.spinning {
-  background: linear-gradient(180deg, #1a8a4a, #0d5c30);
-}
-
-.bonusBuyBtn {
-  flex: 1.2;
-  border-radius: 14px;
-  background: linear-gradient(180deg, #6c3483 0%, #4a235a 100%);
-  border: 1px solid rgba(142, 68, 173, 0.5);
-  color: #fff;
+.summonBtn {
+  flex: 1.1;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #1a2a3a, #0a1520);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  position: relative;
+  color: #1FE3B4;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  box-shadow: 0 4px 20px rgba(108, 52, 131, 0.35);
-  transition: transform 0.1s;
+  box-shadow: 0 0 16px rgba(31,227,180,0.15);
 }
 
-.bonusBuyBtn:hover:not(:disabled) {
-  transform: translateY(-1px);
+.summonBtn::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #1FE3B4, #0A4A40, #1FE3B4);
+  z-index: -1;
+  animation: rune-pulse 2s infinite;
 }
 
-.bonusBuyBtn:disabled {
-  opacity: 0.5;
-}
-
-.bonusBuyLabel {
-  font-size: 0.6rem;
+.summonLabel {
+  font-size: 0.65rem;
   font-weight: 800;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
 }
 
-.bonusBuyCost {
-  font-size: 0.75rem;
-  font-weight: 700;
-  opacity: 0.9;
+.summonSub {
+  font-size: 0.5rem;
+  opacity: 0.8;
+}
+
+@keyframes rune-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
 }
 
 @media (max-width: 480px) {
   .actions { flex-wrap: wrap; }
-  .spinBtn { flex: 1 1 100%; order: -1; padding: 16px; }
-  .autoBtn { flex: 1; }
-  .bonusBuyBtn { flex: 2; }
+  .spinBtn { flex: 1 1 100%; order: -1; padding: 14px; }
 }

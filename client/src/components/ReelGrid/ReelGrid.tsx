@@ -1,49 +1,64 @@
 import { useEffect, useRef, useState } from 'react';
-import type { SymbolId } from '../../types';
+import type { InkOrb, SymbolId } from '../../types';
 import { SymbolIcon } from '../../assets/symbols';
+import { PaylineTrace } from '../PaylineTrace';
+import type { LineWin } from '../../types';
 import styles from './ReelGrid.module.css';
 
 interface Props {
   grid: SymbolId[][] | null;
   spinning: boolean;
+  anticipation: boolean;
   winningCells: Set<string>;
+  inkOrbs: InkOrb[];
+  lineWins: LineWin[];
+  paylines: number[][];
+  showPaylines: boolean;
   onSpinComplete: () => void;
 }
 
-const REEL_DELAYS = [500, 750, 1000, 1250, 1500];
-const SPIN_MS = 1700;
+const BASE_DELAYS = [400, 580, 760, 980, 1200];
+const ANTICIPATION_EXTRA = [0, 0, 0, 600, 900];
 
-const DEFAULT: SymbolId[][] = [
-  ['coin', 'anchor', 'compass', 'map', 'pearl'],
-  ['anchor', 'crown', 'trident', 'chest', 'coin'],
-  ['compass', 'map', 'pearl', 'anchor', 'compass'],
-];
-
-export function ReelGrid({ grid, spinning, winningCells, onSpinComplete }: Props) {
-  const [display, setDisplay] = useState<SymbolId[][]>(grid ?? DEFAULT);
-  const [activeReels, setActiveReels] = useState<boolean[]>([false, false, false, false, false]);
+export function ReelGrid({
+  grid,
+  spinning,
+  anticipation,
+  winningCells,
+  inkOrbs,
+  lineWins,
+  paylines,
+  showPaylines,
+  onSpinComplete,
+}: Props) {
+  const [display, setDisplay] = useState<SymbolId[][]>(
+    grid ?? defaultGrid()
+  );
+  const [activeReels, setActiveReels] = useState([false, false, false, false, false]);
+  const [landed, setLanded] = useState([false, false, false, false, false]);
   const doneRef = useRef(false);
 
   useEffect(() => {
     if (!spinning) {
       if (grid) setDisplay(grid);
       setActiveReels([false, false, false, false, false]);
+      setLanded([false, false, false, false, false]);
       return;
     }
 
     doneRef.current = false;
     setActiveReels([true, true, true, true, true]);
+    setLanded([false, false, false, false, false]);
 
+    const delays = BASE_DELAYS.map((d, i) => d + (anticipation ? ANTICIPATION_EXTRA[i] : 0));
+    const maxDelay = Math.max(...delays) + 400;
     const timers: ReturnType<typeof setTimeout>[] = [];
 
-    REEL_DELAYS.forEach((delay, reel) => {
+    delays.forEach((delay, reel) => {
       timers.push(
         setTimeout(() => {
-          setActiveReels((prev) => {
-            const n = [...prev];
-            n[reel] = false;
-            return n;
-          });
+          setActiveReels((p) => { const n = [...p]; n[reel] = false; return n; });
+          setLanded((p) => { const n = [...p]; n[reel] = true; return n; });
           if (grid) {
             setDisplay((prev) => {
               const next = prev.map((row) => [...row]);
@@ -51,6 +66,7 @@ export function ReelGrid({ grid, spinning, winningCells, onSpinComplete }: Props
               return next;
             });
           }
+          setTimeout(() => setLanded((p) => { const n = [...p]; n[reel] = false; return n; }), 350);
         }, delay)
       );
     });
@@ -62,39 +78,63 @@ export function ReelGrid({ grid, spinning, winningCells, onSpinComplete }: Props
           if (grid) setDisplay(grid);
           onSpinComplete();
         }
-      }, SPIN_MS)
+      }, maxDelay)
     );
 
     return () => timers.forEach(clearTimeout);
-  }, [spinning, grid, onSpinComplete]);
+  }, [spinning, grid, anticipation, onSpinComplete]);
+
+  const orbAt = (row: number, col: number) =>
+    inkOrbs.find((o) => o.row === row && o.col === col);
 
   return (
-    <div className={styles.frame}>
-      <div className={styles.frameGlow} />
+    <div className={`${styles.frame} ${anticipation && spinning ? styles.anticipation : ''}`}>
+      <div className={styles.brassRim} />
       <div className={styles.inner}>
-        <div className={styles.lineBadge}>20 LINES</div>
-        <div className={styles.grid}>
-          {Array.from({ length: 5 }, (_, col) => (
-            <div
-              key={col}
-              className={`${styles.reel} ${activeReels[col] ? styles.reelSpin : ''} ${!activeReels[col] && spinning ? styles.reelLand : ''}`}
-            >
-              {[0, 1, 2].map((row) => {
-                const key = `${row}-${col}`;
-                const win = winningCells.has(key);
-                return (
-                  <div
-                    key={row}
-                    className={`${styles.cell} ${win ? styles.cellWin : ''}`}
-                  >
-                    <SymbolIcon id={display[row][col]} size={56} glowing={win} />
-                  </div>
-                );
-              })}
-            </div>
-          ))}
+        <div className={styles.causticTop} />
+        <span className={styles.badge}>20 LINES</span>
+        <div className={styles.gridWrap}>
+          <div className={styles.grid}>
+            {Array.from({ length: 5 }, (_, col) => (
+              <div
+                key={col}
+                className={`${styles.reel} ${activeReels[col] ? styles.spin : ''} ${landed[col] ? styles.land : ''}`}
+              >
+                {[0, 1, 2].map((row) => {
+                  const key = `${row}-${col}`;
+                  const win = winningCells.has(key);
+                  const orb = orbAt(row, col);
+                  return (
+                    <div key={row} className={`${styles.cell} ${win ? styles.cellWin : ''}`}>
+                      <SymbolIcon id={display[row][col]} size={52} glowing={win} />
+                      {orb && (
+                        <span className={styles.orb} style={{ animationDelay: `${col * 0.1}s` }}>
+                          x{orb.value}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+          <PaylineTrace
+            lineWins={lineWins}
+            paylines={paylines}
+            visible={showPaylines}
+            cellSize={72}
+            gap={6}
+          />
         </div>
       </div>
     </div>
   );
+}
+
+function defaultGrid(): SymbolId[][] {
+  return [
+    ['rope', 'compass', 'map', 'bell', 'skull'],
+    ['barnacle', 'crown', 'chest', 'spyglass', 'wheel'],
+    ['anchor_chain', 'wheel', 'rope', 'compass', 'map'],
+  ];
 }

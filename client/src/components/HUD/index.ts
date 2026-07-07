@@ -1,1 +1,1 @@
-export { HUD } from './HUD';
+export { HUD, RealityCheck } from './HUD';

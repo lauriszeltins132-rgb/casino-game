@@ -1,72 +1,41 @@
-# Kraken's Treasure
+# Kraken's Lair
 
-A portfolio-quality casino slot demo — 5×3 reels, 20 paylines, Kraken's Lair bonus, bonus buy, and server-side ~96% RTP math.
+Premium 5×3, 20-payline casino slot demo — deep-sea horror atmosphere, Kraken's Fury free spins with Ink Orbs, and three-tier bonus buy.
 
-## Quick Start
+## Run
 
 ```bash
 npm install
 npm run dev
 ```
 
-- **Client:** http://localhost:5173
-- **Server:** http://localhost:3001
+Client: http://localhost:5173 · API: http://localhost:3001 · Demo balance: **$10,000**
 
-Demo balance: **$10,000**
+## Features
 
-## Game Features
+- **20 paylines** · per-line-bet paytable · ~96% RTP target (medium-high vol)
+- **PixiJS WebGL** parallax ocean (ships, tentacles, bubbles, lightning)
+- **Anticipation hold** when 2+ scatters on reels 1–3
+- **Kraken's Fury** free spins — Ink Orbs (2x–50x) multiply winning spins
+- **Bonus Buy** — Awaken (75x) · Fury (150x) · Leviathan (400x)
+- **Autoplay** with spin count, loss limit, win limit
+- **Payline trace** animation · odometer win counter · reality check at 15 min
+- **Provably-fair** RNG structure (server seed hash + nonce)
 
-| Feature | Details |
-|---------|---------|
-| Grid | 5 reels × 3 rows |
-| Paylines | 20 fixed lines |
-| Bets | $0.20 · $0.50 · $1 · $2 · $5 · $10 · $25 |
-| RTP | ~96% (server-side reel strips) |
-| Volatility | Medium-high |
-| Wild | Kraken Tentacle (substitutes all except scatter) |
-| Scatter | Kraken Eye — 3 = small pay, 4+ = Kraken's Lair bonus |
-| Bonus Buy | 100× bet — instant bonus trigger |
-| Auto Spin | 50 spins |
+## Symbols
 
-## Kraken's Lair Bonus
+Low: Rope Coil, Barnacle, Anchor Chain, Ship's Wheel  
+Mid: Brass Compass, Spyglass, Treasure Map, Ship's Bell  
+High: Golden Idol Skull, Sunken Crown, Treasure Chest  
+Wild: Kraken's Eye (reels 2–4) · Scatter: The Kraken
 
-- 15 treasure chests, 10 picks
-- Outcomes: gold coins, multipliers (×2–×10), extra picks, ancient relics, jackpot chests
-- **Kraken Rage meter** — fill it for ×2 / ×5 / ×10 prize multipliers
-- Collect 3+ relics for extra bonus at end
+## Math Note
 
-## Project Structure
+96% RTP is a **design target** requiring Monte Carlo validation (millions of spins) and independent certification (GLI/iTech/BMM) before real-money launch.
+
+## Structure
 
 ```
-client/src/
-  assets/symbols/     SVG casino symbol illustrations
-  audio/              Sound manager (placeholder hooks)
-  components/         HUD, ReelGrid, Controls, Bonus, Paytable, WinEffects
-  gameLogic/          API client, helpers
-  types/              TypeScript definitions
-  styles/             Global + app styles
-
-server/src/
-  math/               Reel strips, paylines, config
-  rng/                Provably-fair RNG (server seed hash + nonce)
-  gameLogic/          SlotEngine — spins, bonus, balance
-  types/              Server types
+client/src/   components, assets/symbols (SVG), gameLogic, audio, PixiJS scene
+server/src/   math, rng, gameLogic/SlotEngine
 ```
-
-## API
-
-| Endpoint | Description |
-|----------|-------------|
-| `GET /api/slot/config` | Paytable, lines, bet options |
-| `POST /api/slot/spin` | Spin `{ bet }` |
-| `POST /api/slot/bonus-buy` | Buy bonus `{ bet }` |
-| `POST /api/bonus/pick` | Pick chest `{ bonusId, chestIndex }` |
-| `GET /api/slot/fair` | Provably fair state (seed hash, nonce) |
-
-## Provably Fair (Placeholder)
-
-Server generates `serverSeed`, exposes `sha256(serverSeed)` before spins. Each outcome uses `hash(serverSeed:clientSeed:nonce)`. Backend verification not wired yet — structure is in place.
-
-## Sound
-
-Audio hooks in `client/src/audio/AudioManager.ts`. Drop MP3 files in `client/public/audio/` to enable.

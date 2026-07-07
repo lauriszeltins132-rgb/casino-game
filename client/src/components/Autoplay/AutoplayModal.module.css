@@ -1,0 +1,64 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 85;
+  background: rgba(0,0,0,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal {
+  background: #0c1b2e;
+  border: 1px solid rgba(139,115,85,0.4);
+  border-radius: 14px;
+  padding: 24px;
+  width: 300px;
+}
+
+.modal h2 {
+  font-family: var(--font-display);
+  color: #FFC94A;
+  margin-bottom: 16px;
+}
+
+.label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+}
+
+.label input {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 8px;
+  border-radius: 6px;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.cancel, .start {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: 700;
+}
+
+.cancel {
+  background: rgba(255,255,255,0.06);
+  color: var(--text-dim);
+}
+
+.start {
+  background: #1FE3B4;
+  color: #050B14;
+}

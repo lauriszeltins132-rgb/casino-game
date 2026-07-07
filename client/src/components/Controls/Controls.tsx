@@ -5,14 +5,13 @@ interface Props {
   bet: number;
   betOptions: number[];
   spinning: boolean;
-  autoSpin: boolean;
-  autoSpinCount: number;
-  bonusBuyCost: number;
+  autoActive: boolean;
+  autoRemaining: number;
   disabled: boolean;
   onBetChange: (bet: number) => void;
   onSpin: () => void;
-  onBonusBuy: () => void;
-  onToggleAuto: () => void;
+  onAutoplayOpen: () => void;
+  onBonusBuyOpen: () => void;
 }
 
 function fmt(n: number) {
@@ -23,23 +22,23 @@ export function Controls({
   bet,
   betOptions,
   spinning,
-  autoSpin,
-  autoSpinCount,
-  bonusBuyCost,
+  autoActive,
+  autoRemaining,
   disabled,
   onBetChange,
   onSpin,
-  onBonusBuy,
-  onToggleAuto,
+  onAutoplayOpen,
+  onBonusBuyOpen,
 }: Props) {
   return (
     <footer className={styles.controls}>
       <div className={styles.betRow}>
-        <span className={styles.label}>Select Bet</span>
+        <span className={styles.label}>Bet</span>
         <div className={styles.betOptions}>
           {betOptions.map((amount) => (
             <button
               key={amount}
+              type="button"
               className={`${styles.betBtn} ${bet === amount ? styles.betActive : ''}`}
               onClick={() => { audio.play('button'); onBetChange(amount); }}
               disabled={disabled || spinning}
@@ -52,28 +51,31 @@ export function Controls({
 
       <div className={styles.actions}>
         <button
-          className={`${styles.autoBtn} ${autoSpin ? styles.autoActive : ''}`}
-          onClick={() => { audio.play('button'); onToggleAuto(); }}
-          disabled={spinning && !autoSpin}
+          type="button"
+          className={`${styles.autoBtn} ${autoActive ? styles.autoOn : ''}`}
+          onClick={() => { audio.play('button'); onAutoplayOpen(); }}
+          disabled={spinning && !autoActive}
         >
-          {autoSpin ? `AUTO (${autoSpinCount})` : 'AUTO'}
+          {autoActive ? `AUTO ${autoRemaining}` : 'AUTO'}
         </button>
 
         <button
+          type="button"
           className={`${styles.spinBtn} ${spinning ? styles.spinning : ''}`}
           onClick={() => { audio.play('button'); onSpin(); }}
           disabled={disabled || spinning}
         >
-          {spinning ? 'SPINNING' : 'SPIN'}
+          {spinning ? '···' : 'SPIN'}
         </button>
 
         <button
-          className={styles.bonusBuyBtn}
-          onClick={() => { audio.play('button'); onBonusBuy(); }}
+          type="button"
+          className={styles.summonBtn}
+          onClick={() => { audio.play('button'); onBonusBuyOpen(); }}
           disabled={disabled || spinning}
         >
-          <span className={styles.bonusBuyLabel}>BUY KRAKEN&apos;S LAIR</span>
-          <span className={styles.bonusBuyCost}>{fmt(bonusBuyCost)}</span>
+          <span className={styles.summonLabel}>SUMMON</span>
+          <span className={styles.summonSub}>Bonus Buy</span>
         </button>
       </div>
     </footer>

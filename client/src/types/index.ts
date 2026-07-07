@@ -1,29 +1,26 @@
 export type SymbolId =
-  | 'crown'
-  | 'trident'
-  | 'chest'
-  | 'pearl'
-  | 'anchor'
+  | 'rope'
+  | 'barnacle'
+  | 'anchor_chain'
+  | 'wheel'
   | 'compass'
+  | 'spyglass'
   | 'map'
-  | 'coin'
+  | 'bell'
+  | 'skull'
+  | 'crown'
+  | 'chest'
   | 'wild'
   | 'scatter';
 
-export type BonusChestOutcome =
-  | 'gold_coins'
-  | 'multiplier_x2'
-  | 'multiplier_x3'
-  | 'multiplier_x5'
-  | 'multiplier_x10'
-  | 'kraken_rage'
-  | 'ancient_relic'
-  | 'jackpot';
+export type BonusBuyTier = 'awaken' | 'fury' | 'leviathan';
+
+export type GameMode = 'base' | 'freespin';
 
 export interface SymbolDef {
   id: SymbolId;
   name: string;
-  tier: 'high' | 'mid' | 'low' | 'special';
+  tier: 'low' | 'mid' | 'high' | 'special';
 }
 
 export interface LineWin {
@@ -34,75 +31,76 @@ export interface LineWin {
   payout: number;
 }
 
+export interface InkOrb {
+  row: number;
+  col: number;
+  value: number;
+}
+
+export interface FreeSpinState {
+  sessionId: string;
+  remaining: number;
+  totalAwarded: number;
+  sessionWin: number;
+  retriggered: number;
+}
+
 export interface SpinResult {
   grid: SymbolId[][];
   lineWins: LineWin[];
   scatterCount: number;
   scatterPayout: number;
   linePayout: number;
+  inkOrbs: InkOrb[];
+  orbMultiplier: number;
   totalWin: number;
-  bonusTriggered: boolean;
   balance: number;
   bet: number;
+  lineBet: number;
+  freeSpinsAwarded: number;
+  freeSpinState: FreeSpinState | null;
+  isFreeSpin: boolean;
+  anticipation: boolean;
+  mode: GameMode;
   nonce: number;
   serverSeedHash: string;
   clientSeed: string;
-  bonusId?: string;
-}
-
-export interface BonusChest {
-  index: number;
-  picked: boolean;
-  outcome?: BonusChestOutcome;
-  payout?: number;
-}
-
-export interface BonusState {
-  id: string;
-  bet: number;
-  chests: BonusChest[];
-  picksRemaining: number;
-  totalPicks: number;
-  rageMeter: number;
-  rageLevel: number;
-  rageMultiplier: number;
-  relicsCollected: number;
-  totalWin: number;
-  activeMultiplier: number;
-  completed: boolean;
-}
-
-export interface BonusPickResult {
-  bonus: BonusState;
-  outcome: BonusChestOutcome;
-  payout: number;
-  balance: number;
-  rageLevelUp: boolean;
-  extraPicks: number;
 }
 
 export interface GameConfig {
   paylines: number[][];
   lineCount: number;
-  reelCount: number;
-  rowCount: number;
   symbols: SymbolDef[];
   paytable: Record<SymbolId, [number, number, number]>;
-  scatterPay: Record<number, number>;
-  scatterBonusTrigger: number;
-  bonusBuyMultiplier: number;
+  scatterAwards: Record<number, { spins: number; payMultiplier: number }>;
+  bonusBuyTiers: {
+    id: BonusBuyTier;
+    name: string;
+    costMultiplier: number;
+    spins: number;
+    seededOrbs: number;
+    description: string;
+  }[];
   targetRtp: number;
+  hitFrequency: string;
   volatility: string;
   betOptions: number[];
   demoBalance: number;
-  bonusPicks: number;
-  bonusChestCount: number;
+  maxFreeSpins: number;
+  maxWinMultiplier: number;
 }
 
 export type GamePhase =
   | 'idle'
   | 'spinning'
+  | 'anticipation'
   | 'showing_win'
-  | 'bonus_intro'
-  | 'bonus_active'
-  | 'bonus_complete';
+  | 'freespin_intro'
+  | 'freespin'
+  | 'bonus_buy_cinematic';
+
+export interface AutoplaySettings {
+  spinCount: number;
+  lossLimit: number;
+  winLimit: number;
+}
