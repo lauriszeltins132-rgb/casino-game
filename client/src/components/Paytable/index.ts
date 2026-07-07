@@ -1,0 +1,1 @@
+export { Paytable } from './Paytable';
