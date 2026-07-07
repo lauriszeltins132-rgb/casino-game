@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import {
   bonusBuy,
   getBalance,
@@ -20,6 +22,8 @@ import type { BonusBuyTier } from './types/index.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const clientDist = path.resolve(__dirname, '../../client/dist');
 
 app.use(cors());
 app.use(express.json());
@@ -93,6 +97,12 @@ app.post('/api/slot/bonus-buy', (req, res) => {
   }
 });
 
+app.use(express.static(clientDist));
+app.get('*', (_req, res) => {
+  res.sendFile(path.join(clientDist, 'index.html'));
+});
+
 app.listen(PORT, () => {
   console.log(`Kraken's Lair server on port ${PORT}`);
+  console.log(`Game UI: http://localhost:${PORT}`);
 });

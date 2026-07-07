@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { api } from './gameLogic/api';
 import { getWinningCells } from './gameLogic/helpers';
-import { OceanScene } from './components/OceanScene';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { HUD, RealityCheck } from './components/HUD';
 import { ReelGrid } from './components/ReelGrid';
 import { Controls } from './components/Controls';
@@ -21,6 +21,10 @@ import type {
 } from './types';
 import './styles/global.css';
 import styles from './styles/App.module.css';
+
+const OceanScene = lazy(() =>
+  import('./components/OceanScene').then((m) => ({ default: m.OceanScene }))
+);
 
 export default function App() {
   const [config, setConfig] = useState<GameConfig | null>(null);
@@ -61,10 +65,15 @@ export default function App() {
   fsIdRef.current = fsSessionId;
 
   useEffect(() => {
-    api.getConfig().then((cfg) => {
-      setConfig(cfg);
-      setBet(cfg.betOptions[2] ?? 1);
-    });
+    api.getConfig()
+      .then((cfg) => {
+        setConfig(cfg);
+        setBet(cfg.betOptions[2] ?? 1);
+      })
+      .catch((err) => {
+        console.error('Failed to load game config:', err);
+        setError('Cannot reach game server — run npm run dev from the project root');
+      });
     api.getBalance().then((r) => setBalance(r.balance)).catch(() => {});
   }, []);
 
@@ -237,7 +246,13 @@ export default function App() {
 
   return (
     <div className={styles.app}>
-      <OceanScene intensity={oceanIntensity} bigWin={win > bet * 20} />
+      <div className={styles.oceanBg} aria-hidden />
+      <div className={styles.vignette} aria-hidden />
+      <ErrorBoundary>
+        <Suspense fallback={null}>
+          <OceanScene intensity={oceanIntensity} bigWin={win > bet * 20} />
+        </Suspense>
+      </ErrorBoundary>
 
       <HUD
         balance={balance}

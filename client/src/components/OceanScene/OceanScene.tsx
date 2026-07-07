@@ -18,11 +18,17 @@ export function OceanScene({ intensity = 'base', bigWin = false }: Props) {
     appRef.current = app;
 
     (async () => {
-      await app.init({
-        resizeTo: containerRef.current!,
-        backgroundAlpha: 0,
-        antialias: true,
-      });
+      try {
+        await app.init({
+          resizeTo: containerRef.current!,
+          backgroundAlpha: 0,
+          antialias: true,
+          preference: 'webgl',
+        });
+      } catch (err) {
+        console.warn('OceanScene WebGL init failed — CSS fallback will show:', err);
+        return;
+      }
 
       if (destroyed) {
         app.destroy(true);

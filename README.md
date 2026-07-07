@@ -11,6 +11,10 @@ npm run dev
 
 Client: http://localhost:5173 · API: http://localhost:3001 · Demo balance: **$10,000**
 
+After `npm run build`, the server also serves the built client at **http://localhost:3001** (single URL).
+
+**Black screen?** Make sure you include the port (`:5173` or `:3001`), run `npm run dev` from the project root (starts client + server), then hard-refresh (Cmd+Shift+R).
+
 ## Features
 
 - **20 paylines** · per-line-bet paytable · ~96% RTP target (medium-high vol)
