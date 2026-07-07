@@ -1,196 +1,313 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { api } from './api';
-import { Header } from './components/Header';
+import { api } from './gameLogic/api';
+import { getWinningCells } from './gameLogic/helpers';
+import { HUD } from './components/HUD';
 import { ReelGrid } from './components/ReelGrid';
 import { Controls } from './components/Controls';
-import { WinBanner, FreeSpinIntro, PaytableModal } from './components/WinDisplay';
-import type { GameState, SlotConfig, SpinResponse, SymbolId } from './types';
-import styles from './components/Slot.module.css';
+import { KrakenLair, BonusIntro } from './components/Bonus';
+import { Paytable } from './components/Paytable';
+import { WinOverlay, ScatterShake } from './components/WinEffects';
+import { audio } from './audio/AudioManager';
+import type {
+  BonusChestOutcome,
+  BonusState,
+  GameConfig,
+  GamePhase,
+  SpinResult,
+  SymbolId,
+} from './types';
+import './styles/global.css';
+import styles from './styles/App.module.css';
+
+const AUTO_SPIN_COUNT = 50;
 
 export default function App() {
-  const [config, setConfig] = useState<SlotConfig | null>(null);
-  const [balance, setBalance] = useState(1000);
-  const [betPerLine, setBetPerLine] = useState(0.5);
+  const [config, setConfig] = useState<GameConfig | null>(null);
+  const [balance, setBalance] = useState(10000);
+  const [bet, setBet] = useState(1);
+  const [win, setWin] = useState(0);
   const [grid, setGrid] = useState<SymbolId[][] | null>(null);
-  const [lastResult, setLastResult] = useState<SpinResponse | null>(null);
-  const [gameState, setGameState] = useState<GameState>('idle');
-  const [lastWin, setLastWin] = useState(0);
-  const [freeSpinSessionId, setFreeSpinSessionId] = useState<string | null>(null);
-  const [freeSpinsRemaining, setFreeSpinsRemaining] = useState(0);
-  const [showFreeSpinIntro, setShowFreeSpinIntro] = useState(false);
-  const [pendingFreeSpins, setPendingFreeSpins] = useState(0);
+  const [phase, setPhase] = useState<GamePhase>('idle');
+  const [winningCells, setWinningCells] = useState<Set<string>>(new Set());
   const [showPaytable, setShowPaytable] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const lastResultRef = useRef<SpinResponse | null>(null);
+
+  const [bonus, setBonus] = useState<BonusState | null>(null);
+  const [showBonusIntro, setShowBonusIntro] = useState(false);
+  const [bonusPicking, setBonusPicking] = useState(false);
+  const [lastBonusOutcome, setLastBonusOutcome] = useState<BonusChestOutcome | null>(null);
+  const [lastBonusPayout, setLastBonusPayout] = useState(0);
+  const [scatterShake, setScatterShake] = useState(false);
+
+  const [autoSpin, setAutoSpin] = useState(false);
+  const [autoSpinRemaining, setAutoSpinRemaining] = useState(0);
+
+  const resultRef = useRef<SpinResult | null>(null);
   const autoSpinRef = useRef(false);
+  const autoRemainingRef = useRef(0);
+  const configRef = useRef<GameConfig | null>(null);
+  const betRef = useRef(bet);
+  const balanceRef = useRef(balance);
+  const phaseRef = useRef(phase);
+
+  configRef.current = config;
+  betRef.current = bet;
+  balanceRef.current = balance;
+  phaseRef.current = phase;
 
   useEffect(() => {
-    Promise.all([api.getConfig(), api.getBalance()]).then(([cfg, bal]) => {
+    api.getConfig().then((cfg) => {
       setConfig(cfg);
-      setBalance(bal.balance);
-      setBetPerLine(cfg.betPresets[2] ?? 0.5);
-    }).catch(() => {});
+      setBet(cfg.betOptions[2] ?? 1);
+    });
+    api.getBalance().then((r) => setBalance(r.balance)).catch(() => {});
   }, []);
 
-  const lineCount = config?.lineCount ?? 10;
-  const totalBet = betPerLine * lineCount;
-  const bonusBuyCost = totalBet * (config?.bonusBuyCostMultiplier ?? 100);
+  const bonusBuyCost = bet * (config?.bonusBuyMultiplier ?? 100);
 
-  const doSpin = useCallback(async (useFreeSession: boolean) => {
-    setGameState('spinning');
-    setLastWin(0);
+  const triggerSpin = useCallback(async () => {
+    if (phaseRef.current === 'spinning') return;
+    const currentBet = betRef.current;
+    if (currentBet > balanceRef.current) {
+      setError('Insufficient balance');
+      setAutoSpin(false);
+      autoSpinRef.current = false;
+      return;
+    }
+
+    setPhase('spinning');
+    phaseRef.current = 'spinning';
+    setWin(0);
+    setWinningCells(new Set());
     setError(null);
+    audio.play('spin');
+
+    if (autoSpinRef.current) {
+      autoRemainingRef.current -= 1;
+      setAutoSpinRemaining(autoRemainingRef.current);
+    }
 
     try {
-      const result =
-        useFreeSession && freeSpinSessionId
-          ? await api.spin(betPerLine, freeSpinSessionId)
-          : await api.spin(betPerLine);
-
-      lastResultRef.current = result;
+      const result = await api.spin(currentBet);
+      resultRef.current = result;
       setGrid(result.grid);
-      setLastResult(result);
       setBalance(result.balance);
-      setFreeSpinSessionId(result.freeSpinSessionId);
-      setFreeSpinsRemaining(result.freeSpinsRemaining);
+      balanceRef.current = result.balance;
+      if (configRef.current) {
+        setWinningCells(getWinningCells(result.lineWins, configRef.current.paylines));
+      }
     } catch (err) {
       setError((err as Error).message);
-      setGameState('idle');
-    }
-  }, [betPerLine, freeSpinSessionId]);
-
-  const onSpinComplete = useCallback(() => {
-    const result = lastResultRef.current;
-    if (!result) {
-      setGameState('idle');
-      return;
-    }
-
-    setLastWin(result.totalWin);
-    setGameState('showing_win');
-
-    if (result.freeSpinsAwarded > 0 && result.freeSpinsRemaining > 0) {
-      setPendingFreeSpins(result.freeSpinsAwarded);
-      setShowFreeSpinIntro(true);
-      return;
-    }
-
-    if (result.freeSpinsRemaining > 0) {
-      setTimeout(() => {
-        setGameState('idle');
-        autoSpinRef.current = true;
-      }, result.totalWin > 0 ? 1200 : 500);
-    } else {
-      setFreeSpinSessionId(null);
-      setFreeSpinsRemaining(0);
-      setTimeout(() => setGameState('idle'), result.totalWin > 0 ? 1800 : 400);
+      setPhase('idle');
+      phaseRef.current = 'idle';
+      setAutoSpin(false);
+      autoSpinRef.current = false;
     }
   }, []);
 
-  useEffect(() => {
-    if (autoSpinRef.current && gameState === 'idle' && freeSpinsRemaining > 0 && freeSpinSessionId) {
-      autoSpinRef.current = false;
-      doSpin(true);
+  const finishSpin = useCallback(() => {
+    const result = resultRef.current;
+    if (!result) {
+      setPhase('idle');
+      phaseRef.current = 'idle';
+      return;
     }
-  }, [gameState, freeSpinsRemaining, freeSpinSessionId, doSpin]);
+
+    setWin(result.totalWin);
+    setPhase('showing_win');
+    phaseRef.current = 'showing_win';
+
+    if (result.scatterCount >= 3) {
+      setScatterShake(true);
+      audio.play('scatter');
+      setTimeout(() => setScatterShake(false), 600);
+    }
+
+    audio.playWin(result.totalWin, result.bet);
+
+    if (result.bonusTriggered && result.bonusId) {
+      api.getBonus(result.bonusId).then((b) => {
+        setBonus(b);
+        setTimeout(() => {
+          setShowBonusIntro(true);
+          audio.play('bonus_enter');
+        }, result.totalWin > 0 ? 1800 : 800);
+      });
+      return;
+    }
+
+    const delay = result.totalWin > 0 ? 2000 : 400;
+    setTimeout(() => {
+      setPhase('idle');
+      phaseRef.current = 'idle';
+      if (autoSpinRef.current && autoRemainingRef.current > 0) {
+        triggerSpin();
+      } else if (autoSpinRef.current) {
+        setAutoSpin(false);
+        autoSpinRef.current = false;
+      }
+    }, delay);
+  }, [triggerSpin]);
 
   const handleSpin = () => {
-    if (freeSpinsRemaining > 0 && freeSpinSessionId) {
-      doSpin(true);
+    if (autoSpin) {
+      setAutoSpin(false);
+      autoSpinRef.current = false;
+      autoRemainingRef.current = 0;
+      setAutoSpinRemaining(0);
+    }
+    triggerSpin();
+  };
+
+  const handleToggleAuto = () => {
+    if (autoSpin) {
+      setAutoSpin(false);
+      autoSpinRef.current = false;
+      autoRemainingRef.current = 0;
+      setAutoSpinRemaining(0);
     } else {
-      doSpin(false);
+      setAutoSpin(true);
+      autoSpinRef.current = true;
+      autoRemainingRef.current = AUTO_SPIN_COUNT;
+      setAutoSpinRemaining(AUTO_SPIN_COUNT);
+      if (phaseRef.current === 'idle') triggerSpin();
     }
   };
 
   const handleBonusBuy = async () => {
-    if (gameState === 'spinning') return;
-    setGameState('spinning');
-    setLastWin(0);
+    if (phaseRef.current === 'spinning' || bonus) return;
+    if (bonusBuyCost > balanceRef.current) {
+      setError('Insufficient balance for bonus buy');
+      return;
+    }
+
+    setPhase('spinning');
+    phaseRef.current = 'spinning';
+    setWin(0);
+    setWinningCells(new Set());
     setError(null);
+    audio.play('spin');
 
     try {
-      const result = await api.bonusBuy(betPerLine);
-      lastResultRef.current = result;
+      const result = await api.bonusBuy(betRef.current);
+      resultRef.current = result;
       setGrid(result.grid);
-      setLastResult(result);
       setBalance(result.balance);
-      setFreeSpinSessionId(result.freeSpinSessionId);
-      setFreeSpinsRemaining(result.freeSpinsRemaining);
+      balanceRef.current = result.balance;
+      if (configRef.current) {
+        setWinningCells(getWinningCells(result.lineWins, configRef.current.paylines));
+      }
+      setScatterShake(true);
+      audio.play('scatter');
+      setTimeout(() => setScatterShake(false), 600);
     } catch (err) {
       setError((err as Error).message);
-      setGameState('idle');
+      setPhase('idle');
+      phaseRef.current = 'idle';
     }
   };
 
-  const handleFreeSpinIntroDismiss = () => {
-    setShowFreeSpinIntro(false);
-    setGameState('idle');
-    autoSpinRef.current = true;
+  const handleBonusPick = async (index: number) => {
+    if (!bonus || bonusPicking) return;
+    setBonusPicking(true);
+
+    try {
+      const result = await api.pickChest(bonus.id, index);
+      setBonus(result.bonus);
+      setBalance(result.balance);
+      balanceRef.current = result.balance;
+      setLastBonusOutcome(result.outcome);
+      setLastBonusPayout(result.payout);
+      if (result.rageLevelUp) audio.play('rage_up');
+      audio.playWin(result.payout, bonus.bet);
+
+      if (result.bonus.completed) {
+        setTimeout(() => {
+          setBonus(null);
+          setShowBonusIntro(false);
+          setPhase('idle');
+          phaseRef.current = 'idle';
+          setLastBonusOutcome(null);
+          setLastBonusPayout(0);
+        }, 3000);
+      }
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setBonusPicking(false);
+    }
   };
 
-  const winningLines = lastResult?.lineWins.map((w) => w.lineIndex) ?? [];
+  const handleBonusIntroStart = () => {
+    setShowBonusIntro(false);
+    setPhase('bonus_active');
+    phaseRef.current = 'bonus_active';
+  };
+
+  const spinning = phase === 'spinning';
+  const inBonus = phase === 'bonus_active' && bonus !== null;
 
   return (
-    <div className={styles.game}>
-      <div className={styles.bgOcean} />
-      <div className={styles.bgShip} />
+    <div className={styles.app}>
+      <div className={styles.oceanBg} />
+      <div className={styles.vignette} />
 
-      <Header
-        balance={balance}
-        lastWin={lastWin}
-        totalBet={totalBet}
-        freeSpinsRemaining={freeSpinsRemaining}
-        isFreeSpin={freeSpinsRemaining > 0}
-      />
+      {!inBonus && (
+        <>
+          <HUD balance={balance} bet={bet} win={win} />
 
-      <main className={styles.main}>
-        <ReelGrid
-          grid={grid}
-          spinning={gameState === 'spinning'}
-          winningLines={winningLines}
-          symbols={config?.symbols ?? []}
-          onSpinComplete={onSpinComplete}
+          <main className={styles.main}>
+            <ReelGrid
+              grid={grid}
+              spinning={spinning}
+              winningCells={winningCells}
+              onSpinComplete={finishSpin}
+            />
+            <ScatterShake active={scatterShake} />
+            <WinOverlay amount={win} bet={bet} visible={phase === 'showing_win'} />
+          </main>
+
+          <button className={styles.paytableBtn} onClick={() => setShowPaytable(true)}>
+            ⓘ Paytable
+          </button>
+
+          <Controls
+            bet={bet}
+            betOptions={config?.betOptions ?? [0.2, 0.5, 1, 2, 5, 10, 25]}
+            spinning={spinning}
+            autoSpin={autoSpin}
+            autoSpinCount={autoSpinRemaining}
+            bonusBuyCost={bonusBuyCost}
+            disabled={!!bonus}
+            onBetChange={setBet}
+            onSpin={handleSpin}
+            onBonusBuy={handleBonusBuy}
+            onToggleAuto={handleToggleAuto}
+          />
+        </>
+      )}
+
+      {inBonus && bonus && (
+        <KrakenLair
+          bonus={bonus}
+          onPick={handleBonusPick}
+          lastOutcome={lastBonusOutcome}
+          lastPayout={lastBonusPayout}
+          picking={bonusPicking}
         />
+      )}
 
-        <WinBanner
-          lineWins={lastResult?.lineWins ?? []}
-          scatterCount={lastResult?.scatterCount ?? 0}
-          scatterPayout={lastResult?.scatterPayout ?? 0}
-          totalWin={lastWin}
-          visible={gameState === 'showing_win'}
-        />
-      </main>
+      {showBonusIntro && <BonusIntro onStart={handleBonusIntroStart} />}
 
-      <button className={styles.paytableBtn} onClick={() => setShowPaytable(true)}>
-        Paytable
-      </button>
-
-      <Controls
-        betPerLine={betPerLine}
-        lineCount={lineCount}
-        betPresets={config?.betPresets ?? [0.1, 0.5, 1, 2, 5]}
-        minBet={config?.minBetPerLine ?? 0.1}
-        maxBet={config?.maxBetPerLine ?? 10}
-        bonusBuyCost={bonusBuyCost}
-        spinning={gameState === 'spinning'}
-        isFreeSpin={freeSpinsRemaining > 0}
-        freeSpinsRemaining={freeSpinsRemaining}
-        onBetChange={setBetPerLine}
-        onSpin={handleSpin}
-        onBonusBuy={handleBonusBuy}
-      />
+      {config && (
+        <Paytable config={config} open={showPaytable} onClose={() => setShowPaytable(false)} />
+      )}
 
       {error && (
-        <div className={styles.errorToast} onClick={() => setError(null)}>
+        <div className={styles.error} onClick={() => setError(null)}>
           {error}
         </div>
       )}
-
-      {showFreeSpinIntro && (
-        <FreeSpinIntro count={pendingFreeSpins} onDismiss={handleFreeSpinIntroDismiss} />
-      )}
-
-      <PaytableModal open={showPaytable} onClose={() => setShowPaytable(false)} />
     </div>
   );
 }

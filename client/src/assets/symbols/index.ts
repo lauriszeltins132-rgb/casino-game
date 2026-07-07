@@ -1,0 +1,1 @@
+export { SymbolIcon } from './SymbolIcon';

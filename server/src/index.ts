@@ -2,13 +2,16 @@ import express from 'express';
 import cors from 'cors';
 import {
   bonusBuy,
-  getActiveFreeSpinSession,
   getBalance,
+  getBonus,
   getConfig,
+  getProvablyFair,
+  pickBonusChest,
+  resetDemo,
   setBalance,
+  setClientSeed,
   spin,
-  spinFreeSession,
-} from './slot/engine.js';
+} from './gameLogic/SlotEngine.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -17,7 +20,7 @@ app.use(cors());
 app.use(express.json());
 
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', game: 'Pirate\'s Bounty Slot' });
+  res.json({ status: 'ok', game: "Kraken's Treasure" });
 });
 
 app.get('/api/balance', (_req, res) => {
@@ -25,7 +28,7 @@ app.get('/api/balance', (_req, res) => {
 });
 
 app.post('/api/balance/demo', (_req, res) => {
-  setBalance(1000);
+  resetDemo();
   res.json({ balance: getBalance() });
 });
 
@@ -33,22 +36,24 @@ app.get('/api/slot/config', (_req, res) => {
   res.json(getConfig());
 });
 
-app.get('/api/slot/session', (_req, res) => {
-  const session = getActiveFreeSpinSession();
-  res.json({ session });
+app.get('/api/slot/fair', (_req, res) => {
+  res.json(getProvablyFair());
+});
+
+app.post('/api/slot/client-seed', (req, res) => {
+  try {
+    const { clientSeed } = req.body;
+    setClientSeed(String(clientSeed));
+    res.json(getProvablyFair());
+  } catch (err) {
+    res.status(400).json({ error: (err as Error).message });
+  }
 });
 
 app.post('/api/slot/spin', (req, res) => {
   try {
-    const { betPerLine, sessionId } = req.body as {
-      betPerLine: number;
-      sessionId?: string;
-    };
-
-    const result = sessionId
-      ? spinFreeSession(sessionId)
-      : spin(Number(betPerLine));
-
+    const { bet } = req.body;
+    const result = spin(Number(bet));
     res.json(result);
   } catch (err) {
     res.status(400).json({ error: (err as Error).message });
@@ -57,8 +62,27 @@ app.post('/api/slot/spin', (req, res) => {
 
 app.post('/api/slot/bonus-buy', (req, res) => {
   try {
-    const { betPerLine } = req.body as { betPerLine: number };
-    const result = bonusBuy(Number(betPerLine));
+    const { bet } = req.body;
+    const result = bonusBuy(Number(bet));
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ error: (err as Error).message });
+  }
+});
+
+app.get('/api/bonus/:id', (req, res) => {
+  const bonus = getBonus(req.params.id);
+  if (!bonus) {
+    res.status(404).json({ error: 'Bonus not found' });
+    return;
+  }
+  res.json(bonus);
+});
+
+app.post('/api/bonus/pick', (req, res) => {
+  try {
+    const { bonusId, chestIndex } = req.body;
+    const result = pickBonusChest(bonusId, Number(chestIndex));
     res.json(result);
   } catch (err) {
     res.status(400).json({ error: (err as Error).message });
@@ -66,5 +90,5 @@ app.post('/api/slot/bonus-buy', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Pirate's Bounty slot server running on port ${PORT}`);
+  console.log(`Kraken's Treasure server on port ${PORT}`);
 });
