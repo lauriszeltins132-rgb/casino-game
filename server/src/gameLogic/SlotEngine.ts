@@ -6,7 +6,6 @@ import {
 } from '../rng/provablyFair.js';
 import {
   BASE_REEL_STRIPS,
-  FREE_SPIN_REEL_STRIPS,
   generateBonusBuyGrid,
   generateInkOrbs,
   spinReels,
@@ -19,11 +18,14 @@ import {
   LINE_COUNT,
   MAX_FREE_SPINS,
   MAX_WIN_MULTIPLIER,
+  ORB_COUNT_WEIGHTS,
+  ORB_DROP_CHANCE,
   PAYLINES,
   PAYTABLE,
   SCATTER_AWARDS,
   TARGET_RTP,
   HIT_FREQUENCY,
+  FS_TRIGGER_RATE,
 } from '../math/config.js';
 import type {
   BonusBuyTier,
@@ -103,6 +105,7 @@ export function getConfig(): GameConfig {
     })),
     targetRtp: TARGET_RTP,
     hitFrequency: HIT_FREQUENCY,
+    fsTriggerRate: FS_TRIGGER_RATE,
     volatility: 'medium-high',
     betOptions: BET_OPTIONS,
     demoBalance: DEMO_BALANCE,
@@ -125,15 +128,20 @@ function toFreeSpinState(session: FreeSpinSession): FreeSpinState {
   };
 }
 
+function rollOrbDrop(pf: ProvablyFairState): boolean {
+  const r = fairRandomInt(pf, 1000);
+  advanceNonce(pf, r.nonce);
+  return r.value < ORB_DROP_CHANCE * 1000;
+}
+
 function rollOrbCount(pf: ProvablyFairState): number {
-  const weights = [0, 35, 45, 20];
-  const total = weights.reduce((a, b) => a + b, 0);
+  const total = ORB_COUNT_WEIGHTS.reduce((a, b) => a + b, 0);
   const r = fairRandomInt(pf, total);
   advanceNonce(pf, r.nonce);
   let cum = 0;
-  for (let i = 0; i < weights.length; i++) {
-    cum += weights[i];
-    if (r.value < cum) return i;
+  for (let i = 0; i < ORB_COUNT_WEIGHTS.length; i++) {
+    cum += ORB_COUNT_WEIGHTS[i];
+    if (r.value < cum) return i + 1;
   }
   return 1;
 }
@@ -165,19 +173,17 @@ function buildResult(
       session.seededOrbsRemaining = [];
     }
 
-    if (eval_.linePayout > 0) {
+    if (eval_.linePayout > 0 && rollOrbDrop(pfState)) {
       const count = rollOrbCount(pfState);
-      if (count > 0) {
-        const occupied = new Set(inkOrbs.map((o) => `${o.row}-${o.col}`));
-        const { orbs, nonce: n } = generateInkOrbs(
-          pfState,
-          count,
-          session.orbWeightTier === 'premium',
-          occupied
-        );
-        inkOrbs = [...inkOrbs, ...orbs];
-        advanceNonce(pfState, n);
-      }
+      const occupied = new Set(inkOrbs.map((o) => `${o.row}-${o.col}`));
+      const { orbs, nonce: n } = generateInkOrbs(
+        pfState,
+        count,
+        session.orbWeightTier === 'premium',
+        occupied
+      );
+      inkOrbs = [...inkOrbs, ...orbs];
+      advanceNonce(pfState, n);
     }
   }
 
@@ -265,7 +271,8 @@ export function spin(totalBet: number, sessionId?: string): SpinResult {
     session!.remaining -= 1;
   }
 
-  const strips = isFreeSpin ? FREE_SPIN_REEL_STRIPS : BASE_REEL_STRIPS;
+  // Free spins use the same calibrated base strips as kraken_sim.py
+  const strips = BASE_REEL_STRIPS;
   const { grid, nonce } = spinReels(pfState, strips);
   return buildResult(grid, totalBet, nonce, isFreeSpin, session, betDeducted);
 }

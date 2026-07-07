@@ -83,6 +83,7 @@ export interface GameConfig {
   }[];
   targetRtp: number;
   hitFrequency: string;
+  fsTriggerRate?: string;
   volatility: string;
   betOptions: number[];
   demoBalance: number;

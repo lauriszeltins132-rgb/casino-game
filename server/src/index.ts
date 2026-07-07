@@ -9,6 +9,13 @@ import {
   setClientSeed,
   spin,
 } from './gameLogic/SlotEngine.js';
+import {
+  BONUS_BUY_TIERS,
+  CALIBRATION_NOTE,
+  MEASURED_RTP,
+  PAYTABLE,
+  TARGET_RTP,
+} from './math/config.js';
 import type { BonusBuyTier } from './types/index.js';
 
 const app = express();
@@ -32,6 +39,27 @@ app.post('/api/balance/demo', (_req, res) => {
 
 app.get('/api/slot/config', (_req, res) => {
   res.json(getConfig());
+});
+
+app.get('/api/slot/calibration', (_req, res) => {
+  res.json({
+    game: "Kraken's Lair",
+    targetRtp: TARGET_RTP,
+    measuredRtp: MEASURED_RTP,
+    calibration: CALIBRATION_NOTE,
+    paytable: PAYTABLE,
+    paytableNote:
+      'Per-line-bet multipliers for 3/4/5 of a kind. Design ratios × 75 — use these values, not the first math-model doc.',
+    bonusBuyTiers: BONUS_BUY_TIERS.map((t) => ({
+      id: t.id,
+      name: t.name,
+      costMultiplier: t.costMultiplier,
+      spins: t.spins,
+      seededOrbs: t.seededOrbs,
+      simulationStatus: 'pending — run tools/kraken_sim.py bonus-buy pass before certification',
+    })),
+    simulator: 'tools/kraken_sim.py',
+  });
 });
 
 app.get('/api/slot/fair', (_req, res) => {

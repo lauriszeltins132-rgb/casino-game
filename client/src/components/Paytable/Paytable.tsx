@@ -23,7 +23,9 @@ export function Paytable({ config, open, onClose }: Props) {
         <p className={styles.note}>
           20 lines · Pays left-to-right · 3+ matching · Per line bet = total bet ÷ 20
           <br />
-          RTP {config.targetRtp * 100}% target · Hit freq {config.hitFrequency} · {config.volatility}
+          RTP {(config.targetRtp * 100).toFixed(1)}% target
+          {config.fsTriggerRate ? ` · FS ~${config.fsTriggerRate}` : ''}
+          {' · '}Hit freq {config.hitFrequency} · {config.volatility}
         </p>
         <div className={styles.table}>
           {ORDER.map((id) => {
@@ -45,7 +47,7 @@ export function Paytable({ config, open, onClose }: Props) {
                       5: {config.scatterAwards[5]?.spins} FS + {config.scatterAwards[5]?.payMultiplier}x
                     </span>
                   ) : id === 'wild' ? (
-                    <span>Substitutes · 5-kind = 100x line bet</span>
+                    <span>Substitutes · 5-kind = {pays[2]}x line bet</span>
                   ) : (
                     <span>3x={pays[0]} · 4x={pays[1]} · 5x={pays[2]}</span>
                   )}
