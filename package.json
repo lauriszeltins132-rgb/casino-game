@@ -1,8 +1,8 @@
 {
-  "name": "krakens-treasure",
+  "name": "krakens-lair",
   "version": "1.0.0",
   "private": true,
-  "description": "Kraken's Treasure - premium casino slot demo",
+  "description": "Kraken's Lair - premium casino slot demo",
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "npm run dev --workspace=server",
