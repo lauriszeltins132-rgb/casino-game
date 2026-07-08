@@ -1,13 +1,13 @@
 .root {
   position: fixed;
   inset: 0;
-  z-index: 2;
+  z-index: 3;
   pointer-events: none;
-  opacity: 0.95;
+  opacity: 1;
 }
 
 .root[data-strong='0'] {
-  opacity: 0.52;
+  opacity: 1;
 }
 
 .root[data-mid='1'] {
@@ -41,7 +41,7 @@
     radial-gradient(circle at 50% 10%, rgba(255,201,74,0.14) 0%, transparent 40%),
     linear-gradient(180deg, rgba(122,12,40,0.22) 0%, rgba(65,8,22,0.6) 55%, rgba(10,3,8,0.92) 100%);
   filter: drop-shadow(0 0 22px rgba(31,227,180,0.10));
-  opacity: 0.0;
+  opacity: 0.18;
 }
 
 .root[data-strong='1'] .tentLeft,
@@ -97,7 +97,7 @@
   align-items: center;
   justify-content: center;
   gap: 130px;
-  opacity: 0;
+  opacity: 0.28;
 }
 
 .root[data-mid='1'] .eyes,
@@ -138,7 +138,7 @@
   background: radial-gradient(circle, rgba(31,227,180,0.20) 0%, rgba(31,227,180,0.0) 60%);
   left: 20%;
   top: 48%;
-  opacity: 0.0;
+  opacity: 0.22;
   animation: suction-pulse 2.8s ease-in-out infinite;
 }
 
