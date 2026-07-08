@@ -255,144 +255,136 @@ export default function App() {
   const spinning = phase === 'spinning';
 
   return (
-    <div className={styles.app}>
-      <div className={styles.oceanBg} aria-hidden />
-      <div className={styles.vignette} aria-hidden />
-      <SceneBackground />
-      <ErrorBoundary>
+    <ErrorBoundary>
+      <div className={styles.app}>
+        <div className={styles.oceanBg} aria-hidden />
+        <div className={styles.vignette} aria-hidden />
+        <SceneBackground />
         <Suspense fallback={null}>
           <OceanScene intensity={oceanIntensity} bigWin={win > bet * 20} />
         </Suspense>
-      </ErrorBoundary>
 
-      <KrakenBackground intensity={oceanIntensity} />
+        <KrakenBackground intensity={oceanIntensity} />
 
-      {phase === 'freespin' && <KrakenLairOverlay />}
+        {phase === 'freespin' && <KrakenLairOverlay />}
 
-      <HUD
-        balance={balance}
-        bet={bet}
-        win={win}
-        targetRtp={(config?.targetRtp ?? 0.96) * 100}
-        volatility={config?.volatility ?? 'medium-high'}
-        freeSpinsRemaining={fsRemaining}
-        sessionSeconds={sessionSeconds}
-        rageLevel={rageLevel}
-        ragePulseKey={ragePulseKey}
-      />
-
-      <main className={styles.main}>
-        <ReelGrid
-          grid={grid}
-          spinning={spinning}
-          anticipation={anticipation}
-          winningCells={winningCells}
-          inkOrbs={inkOrbs}
-          lineWins={lastResult?.lineWins ?? []}
-          paylines={config?.paylines ?? []}
-          showPaylines={phase === 'showing_win'}
-          onSpinComplete={finishSpin}
+        <HUD
+          balance={balance}
+          bet={bet}
+          win={win}
+          targetRtp={(config?.targetRtp ?? 0.96) * 100}
+          volatility={config?.volatility ?? 'medium-high'}
+          freeSpinsRemaining={fsRemaining}
+          sessionSeconds={sessionSeconds}
+          rageLevel={rageLevel}
+          ragePulseKey={ragePulseKey}
         />
-        <WinOverlay amount={win} bet={bet} visible={phase === 'showing_win'} />
-      </main>
 
-      <button type="button" className={styles.paytableBtn} onClick={() => setShowPaytable(true)}>
-        Paytable
-      </button>
-
-      <RageFlashOverlay triggerKey={ragePulseKey} />
-
-      <Controls
-        bet={bet}
-        betOptions={config?.betOptions ?? [0.2, 0.5, 1, 2, 5, 10, 25]}
-        spinning={spinning}
-        autoActive={autoActive}
-        autoRemaining={autoRemaining}
-        disabled={showFsIntro || showCinematic}
-        onBetChange={setBet}
-        onSpin={handleSpin}
-        onAutoplayOpen={() => setShowAutoplay(true)}
-        onBonusBuyOpen={() => setShowBonusBuy(true)}
-      />
-
-      {config && (
-        <>
-          <Paytable config={config} open={showPaytable} onClose={() => setShowPaytable(false)} />
-          <BonusBuyModal
-            open={showBonusBuy}
-            bet={bet}
-            tiers={config.bonusBuyTiers}
-            onConfirm={handleBonusBuyConfirm}
-            onClose={() => setShowBonusBuy(false)}
+        <main className={styles.main}>
+          <ReelGrid
+            grid={grid}
+            spinning={spinning}
+            anticipation={anticipation}
+            winningCells={winningCells}
+            inkOrbs={inkOrbs}
+            lineWins={lastResult?.lineWins ?? []}
+            paylines={config?.paylines ?? []}
+            showPaylines={phase === 'showing_win'}
+            onSpinComplete={finishSpin}
           />
-        </>
-      )}
+          <WinOverlay amount={win} bet={bet} visible={phase === 'showing_win'} />
+        </main>
 
-      <AutoplayModal
-        open={showAutoplay}
-        onStart={handleAutoplayStart}
-        onClose={() => setShowAutoplay(false)}
-      />
+        <button type="button" className={styles.paytableBtn} onClick={() => setShowPaytable(true)}>
+          Paytable
+        </button>
 
-      {showFsIntro && <FreeSpinIntro spins={pendingFs} onStart={handleFsIntroStart} />}
-      {showCinematic &&
-        bonusCinematicTier &&
-        config && (
-          <BonusBuyCinematic
-            tier={bonusCinematicTier}
-            bet={bet}
-            rewardMultiplier={
-              config.bonusBuyTiers.find((t) => t.id === bonusCinematicTier)?.costMultiplier ?? 0
-            }
-            freeSpins={
-              config.bonusBuyTiers.find((t) => t.id === bonusCinematicTier)?.spins ?? 0
-            }
-            onEnterBonus={async () => {
-              // Enter the real bonus flow (server RNG + RTP logic)
-              const tierToUse = bonusCinematicTier;
-              if (!tierToUse) return;
+        <RageFlashOverlay triggerKey={ragePulseKey} />
 
-              setShowCinematic(false);
-              setBonusCinematicTier(null);
-              setWin(0);
-              setWinningCells(new Set());
-              setInkOrbs([]);
+        <Controls
+          bet={bet}
+          betOptions={config?.betOptions ?? [0.2, 0.5, 1, 2, 5, 10, 25]}
+          spinning={spinning}
+          autoActive={autoActive}
+          autoRemaining={autoRemaining}
+          disabled={showFsIntro || showCinematic}
+          onBetChange={setBet}
+          onSpin={handleSpin}
+          onAutoplayOpen={() => setShowAutoplay(true)}
+          onBonusBuyOpen={() => setShowBonusBuy(true)}
+        />
 
-              try {
-                const result = await api.bonusBuy(betRef.current, tierToUse);
-                resultRef.current = result;
-                setGrid(result.grid);
-                setLastResult(result);
-                setBalance(result.balance);
-                balanceRef.current = result.balance;
-                setAnticipation(result.anticipation);
-                if (config) setWinningCells(getWinningCells(result.lineWins, config.paylines));
-
-                if (result.freeSpinState) {
-                  setFsSessionId(result.freeSpinState.sessionId);
-                  setFsRemaining(result.freeSpinState.remaining);
-                  fsIdRef.current = result.freeSpinState.sessionId;
-                  setPendingFs(result.freeSpinsAwarded);
-                  setShowFsIntro(true);
-                }
-
-                // Let the FreeSpinIntro handle the transition into the first free spin.
-                setPhase('idle');
-              } catch (err) {
-                setError((err as Error).message);
-                setPhase('idle');
-              }
-            }}
-          />
+        {config && (
+          <>
+            <Paytable config={config} open={showPaytable} onClose={() => setShowPaytable(false)} />
+            <BonusBuyModal
+              open={showBonusBuy}
+              bet={bet}
+              tiers={config.bonusBuyTiers}
+              onConfirm={handleBonusBuyConfirm}
+              onClose={() => setShowBonusBuy(false)}
+            />
+          </>
         )}
 
-      <RealityCheck show={showReality} onDismiss={() => setShowReality(false)} />
+        <AutoplayModal open={showAutoplay} onStart={handleAutoplayStart} onClose={() => setShowAutoplay(false)} />
 
-      {error && (
-        <div className={styles.error} onClick={() => setError(null)}>
-          {error}
-        </div>
-      )}
-    </div>
+        {showFsIntro && <FreeSpinIntro spins={pendingFs} onStart={handleFsIntroStart} />}
+        {showCinematic &&
+          bonusCinematicTier &&
+          config && (
+            <BonusBuyCinematic
+              tier={bonusCinematicTier}
+              bet={bet}
+              rewardMultiplier={
+                config.bonusBuyTiers.find((t) => t.id === bonusCinematicTier)?.costMultiplier ?? 0
+              }
+              freeSpins={config.bonusBuyTiers.find((t) => t.id === bonusCinematicTier)?.spins ?? 0}
+              onEnterBonus={async () => {
+                const tierToUse = bonusCinematicTier;
+                if (!tierToUse) return;
+
+                setShowCinematic(false);
+                setBonusCinematicTier(null);
+                setWin(0);
+                setWinningCells(new Set());
+                setInkOrbs([]);
+
+                try {
+                  const result = await api.bonusBuy(betRef.current, tierToUse);
+                  resultRef.current = result;
+                  setGrid(result.grid);
+                  setLastResult(result);
+                  setBalance(result.balance);
+                  balanceRef.current = result.balance;
+                  setAnticipation(result.anticipation);
+                  if (config) setWinningCells(getWinningCells(result.lineWins, config.paylines));
+
+                  if (result.freeSpinState) {
+                    setFsSessionId(result.freeSpinState.sessionId);
+                    setFsRemaining(result.freeSpinState.remaining);
+                    fsIdRef.current = result.freeSpinState.sessionId;
+                    setPendingFs(result.freeSpinsAwarded);
+                    setShowFsIntro(true);
+                  }
+
+                  setPhase('idle');
+                } catch (err) {
+                  setError((err as Error).message);
+                  setPhase('idle');
+                }
+              }}
+            />
+          )}
+
+        <RealityCheck show={showReality} onDismiss={() => setShowReality(false)} />
+
+        {error && (
+          <div className={styles.error} onClick={() => setError(null)}>
+            {error}
+          </div>
+        )}
+      </div>
+    </ErrorBoundary>
   );
 }
