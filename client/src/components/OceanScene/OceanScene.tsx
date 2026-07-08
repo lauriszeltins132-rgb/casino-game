@@ -46,11 +46,16 @@ export function OceanScene({ intensity = 'base', bigWin = false }: Props) {
       const bg = new Graphics();
       const ships: { g: Graphics; phase: number; speed: number; y: number }[] = [];
       const bubbles: { g: Graphics; x: number; y: number; speed: number }[] = [];
+      const particles: { g: Graphics; x: number; y: number; speed: number }[] = [];
       let tentacleTimer = 0;
       let tentacle: Graphics | null = null;
       let tentacleProgress = 0;
       let lightningFlash = 0;
       let causticPhase = 0;
+      let raysPhase = 0;
+      let krakenShiftX = 0;
+      let krakenTargetShiftX = 0;
+      let krakenMoveTimer = 0;
 
       function drawBg() {
         bg.clear();
@@ -62,7 +67,7 @@ export function OceanScene({ intensity = 'base', bigWin = false }: Props) {
           bg.rect(0, H * 0.1 * i, W, H * 0.2);
           bg.fill({ color: 0x0c1b2e, alpha: 0.15 - i * 0.02 });
         }
-        const rayAlpha = intensity === 'freespin' ? 0.12 : 0.06;
+        const rayAlpha = intensity === 'freespin' ? 0.16 : intensity === 'bonus' ? 0.11 : 0.06;
         bg.moveTo(W * 0.3, 0);
         bg.lineTo(W * 0.45, H);
         bg.lineTo(W * 0.35, H);
@@ -109,10 +114,121 @@ export function OceanScene({ intensity = 'base', bigWin = false }: Props) {
         bubbles.push({ g, x: g.x, y: g.y, speed: 0.3 + Math.random() * 0.8 });
       }
 
+      // Foreground particles (floating dust / micro-bubbles)
+      for (let i = 0; i < 70; i++) {
+        const g = new Graphics();
+        const r = 0.8 + Math.random() * 2.2;
+        g.circle(0, 0, r);
+        g.fill({ color: 0x1fe3b4, alpha: 0.08 + Math.random() * 0.25 });
+        g.x = Math.random() * w();
+        g.y = Math.random() * h();
+        root.addChildAt(g, 2);
+        particles.push({ g, x: g.x, y: g.y, speed: 0.15 + Math.random() * 0.55 });
+      }
+
       root.addChildAt(bg, 0);
 
       const caustics = new Graphics();
       root.addChild(caustics);
+
+      // Distant ruins / temple silhouettes (mid layer)
+      const ruins = new Graphics();
+      root.addChildAt(ruins, 3);
+      const seaweed = new Graphics();
+      root.addChildAt(seaweed, 4);
+
+      // Kraken layer: only fades in during bonus / freespin intensity
+      const krakenLayer = new Container();
+      const krakenTentacles: Graphics[] = [];
+      const TENTACLE_COUNT = 7;
+
+      for (let i = 0; i < TENTACLE_COUNT; i++) {
+        const g = new Graphics();
+        krakenTentacles.push(g);
+        krakenLayer.addChild(g);
+      }
+
+      // Body silhouette
+      const krakenBody = new Graphics();
+      krakenLayer.addChildAt(krakenBody, 0);
+      root.addChild(krakenLayer);
+
+      // Additional rays in bonus/freespin
+      const rays = new Graphics();
+      root.addChildAt(rays, 1);
+
+      function lerp(a: number, b: number, t: number) {
+        return a + (b - a) * t;
+      }
+
+      function cubicPoint(
+        p0: number,
+        p1: number,
+        p2: number,
+        p3: number,
+        t: number
+      ) {
+        const u = 1 - t;
+        return u * u * u * p0 + 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t * p3;
+      }
+
+      function drawKrakenBackdrop(alpha: number) {
+        const W = w();
+        const H = h();
+        krakenLayer.alpha = alpha;
+
+        // Body blob
+        krakenBody.clear();
+        krakenBody.beginFill(0x020911, alpha * 0.9);
+        const cx = W * 0.54 + krakenShiftX;
+        krakenBody.moveTo(cx - 220, H * 0.52);
+        krakenBody.bezierCurveTo(cx - 240, H * 0.44, cx - 140, H * 0.35, cx - 70, H * 0.40);
+        krakenBody.bezierCurveTo(cx - 10, H * 0.22, cx + 90, H * 0.26, cx + 140, H * 0.38);
+        krakenBody.bezierCurveTo(cx + 200, H * 0.47, cx + 190, H * 0.56, cx + 90, H * 0.58);
+        krakenBody.bezierCurveTo(cx + 10, H * 0.65, cx - 160, H * 0.66, cx - 220, H * 0.52);
+        krakenBody.closePath();
+        krakenBody.endFill();
+
+        // Tentacles
+        krakenTentacles.forEach((g, idx) => {
+          const i = idx / (TENTACLE_COUNT - 1);
+          const baseX = W * 0.4 + i * W * 0.3;
+          const wobble = Math.sin((performance.now() / 1000) * (0.2 + i * 0.12) + i * 4.2) * (26 + i * 24);
+          const sway = krakenShiftX * (0.4 + i * 0.2);
+          const x0 = baseX + sway;
+          const y0 = H * 0.50;
+          const x3 = x0 + wobble * 0.25;
+          const y3 = H * 1.06;
+          const x1 = x0 + wobble * 0.55;
+          const y1 = H * (0.68 + i * 0.02);
+          const x2 = x0 - wobble * 0.12;
+          const y2 = H * (0.84 - i * 0.01);
+
+          g.clear();
+          g.lineStyle(22 - i * 2.5, 0x021018, alpha);
+          g.beginFill(0x021018, alpha * 0.35);
+          g.moveTo(x0, y0);
+          g.bezierCurveTo(x1, y1, x2, y2, x3, y3);
+          g.endFill();
+          g.lineStyle(6, 0x1fe3b4, alpha * 0.10);
+          g.moveTo(x0, y0);
+          g.bezierCurveTo(x1, y1, x2, y2, x3, y3);
+
+          // Suction cups
+          g.lineStyle(0);
+          const cups = 5;
+          for (let c = 0; c < cups; c++) {
+            const t = 0.15 + (c / (cups + 1)) * 0.8;
+            const cx = cubicPoint(x0, x1, x2, x3, t);
+            const cy = cubicPoint(y0, y1, y2, y3, t);
+            g.beginFill(0x00ff9c, alpha * 0.18);
+            g.drawCircle(cx, cy, 4 - i * 0.3);
+            g.endFill();
+            g.lineStyle(1, 0x1fe3b4, alpha * 0.08);
+            g.drawCircle(cx, cy, 4 - i * 0.3);
+          }
+        });
+      }
 
       app.ticker.add((ticker) => {
         const dt = ticker.deltaTime / 60;
@@ -133,6 +249,17 @@ export function OceanScene({ intensity = 'base', bigWin = false }: Props) {
           if (b.y < -10) {
             b.y = H + 10;
             b.x = Math.random() * W;
+          }
+        });
+
+        particles.forEach((p) => {
+          p.y -= p.speed * dt * 18;
+          p.x = p.x + Math.sin(t * 0.45 + p.x * 0.01) * dt * 2.2;
+          p.g.x = p.x;
+          p.g.y = p.y;
+          if (p.y < -20) {
+            p.y = H + 20;
+            p.x = Math.random() * W;
           }
         });
 
@@ -180,6 +307,24 @@ export function OceanScene({ intensity = 'base', bigWin = false }: Props) {
           bg.alpha = 1;
         }
 
+        // Moving rays layer
+        raysPhase += dt * 0.025;
+        rays.clear();
+        const showKraken = intensity === 'bonus' || intensity === 'freespin';
+        const rayCount = showKraken ? 5 : 3;
+        const rayAlpha = showKraken ? 0.14 : 0.06;
+        for (let i = 0; i < rayCount; i++) {
+          const rx = W * (0.15 + i * 0.18) + Math.sin(raysPhase + i * 1.4) * 30;
+          const topY = 0;
+          const bottomY = H * (0.75 + Math.sin(raysPhase * 0.9 + i) * 0.06);
+          rays.beginFill(0x1fe3b4, rayAlpha * (1 - i * 0.12));
+          rays.moveTo(rx, topY);
+          rays.lineTo(rx + 22 + i * 4, bottomY);
+          rays.lineTo(rx - 22 - i * 4, bottomY);
+          rays.closePath();
+          rays.endFill();
+        }
+
         causticPhase += dt * 0.5;
         caustics.clear();
         for (let i = 0; i < 8; i++) {
@@ -191,6 +336,54 @@ export function OceanScene({ intensity = 'base', bigWin = false }: Props) {
         if (intensity === 'anticipation') {
           caustics.rect(0, 0, W, H);
           caustics.fill({ color: 0xff2020, alpha: 0.04 + Math.sin(t * 8) * 0.02 });
+        }
+
+        // Distant ruins + seaweed
+        ruins.clear();
+        seaweed.clear();
+        const ruinsAlpha = showKraken ? 0.22 : 0.12;
+        ruins.fill({ color: 0x01070f, alpha: ruinsAlpha });
+        const baseY = H * 0.62;
+        const ruinCount = 6;
+        for (let i = 0; i < ruinCount; i++) {
+          const rx = W * (0.1 + (i / ruinCount) * 0.8) + Math.sin(t * 0.22 + i) * 12;
+          const rh = 60 + i * 10;
+          ruins.beginFill(0x01070f, ruinsAlpha);
+          ruins.drawRoundedRect(rx - 18, baseY - rh, 36, rh, 10);
+          ruins.endFill();
+          ruins.beginFill(0x021018, ruinsAlpha * 0.7);
+          ruins.drawRoundedRect(rx - 10, baseY - rh - 22, 20, 16, 7);
+          ruins.endFill();
+        }
+        seaweed.fill({ color: 0x001014, alpha: 0.22 });
+        for (let i = 0; i < 4; i++) {
+          const sx = W * (0.04 + i * 0.22) + Math.sin(t * 0.3 + i) * 8;
+          seaweed.lineStyle(8, 0x001014, 0.22);
+          seaweed.moveTo(sx, H);
+          seaweed.bezierCurveTo(
+            sx + 12,
+            H * 0.72,
+            sx - 12,
+            H * 0.54,
+            sx + Math.sin(t * 0.2 + i) * 8,
+            H * 0.48
+          );
+        }
+
+        // Kraken movement: occasional left/right sway + tentacle splashes
+        if (showKraken) {
+          krakenMoveTimer += dt;
+          if (krakenMoveTimer > 6 + Math.sin(t * 0.1) * 2) {
+            krakenMoveTimer = 0;
+            krakenTargetShiftX = (Math.random() * 2 - 1) * 90;
+          }
+          krakenShiftX = lerp(krakenShiftX, krakenTargetShiftX, 0.035 + dt * 0.05);
+          // Fade-in
+          drawKrakenBackdrop(0.92);
+        } else {
+          krakenShiftX = lerp(krakenShiftX, 0, 0.05);
+          drawKrakenBackdrop(0);
+          krakenMoveTimer = 0;
         }
       });
 
