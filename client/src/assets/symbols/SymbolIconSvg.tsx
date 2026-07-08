@@ -125,41 +125,187 @@ function render(id: SymbolId) {
     case 'crown':
       return (
         <g>
-          <path d="M14 50 L20 28 L32 40 L40 20 L48 40 L60 28 L66 50 Z" fill={`url(#goldG-${id})`} stroke="#8B6914" strokeWidth="1.5" />
-          <rect x="14" y="50" width="52" height="8" rx="2" fill={`url(#goldG-${id})`} />
-          <circle cx="20" cy="28" r="3" fill="#1FE3B4" />
-          <circle cx="40" cy="20" r="4" fill="#00FF9C" />
-          <circle cx="60" cy="28" r="3" fill="#1FE3B4" />
+          {/* Outer crown silhouette */}
+          <path
+            d="M12 52
+               L20 26
+               L32 42
+               L40 18
+               L48 42
+               L60 26
+               L68 52 Z"
+            fill={`url(#goldG-${id})`}
+            stroke="#8B6914"
+            strokeWidth="1.8"
+          />
+          <rect x="18" y="52" width="44" height="9" rx="2.2" fill={`url(#goldG-${id})`} />
+
+          {/* Gems */}
+          <g>
+            <path d="M26 48 L32 34 L38 48 Z" fill="#1FE3B4" opacity="0.95" stroke="#0A4A40" strokeWidth="1" />
+            <path d="M42 48 L40 34 L48 48 Z" fill="#00FF9C" opacity="0.9" stroke="#0A4A40" strokeWidth="1" />
+            <circle cx="40" cy="22" r="5" fill="#00FF9C" opacity="0.95" />
+            <circle cx="40" cy="22" r="2.2" fill="#FFF0A8" opacity="0.9" />
+            <circle cx="20" cy="28" r="3.2" fill="#1FE3B4" opacity="0.95" />
+            <circle cx="60" cy="28" r="3.2" fill="#1FE3B4" opacity="0.95" />
+          </g>
+
+          {/* Kraken tendril accent */}
+          <path
+            d="M30 58
+               C28 48, 34 44, 38 46
+               C42 48, 44 54, 42 60"
+            fill="none"
+            stroke="#1FE3B4"
+            strokeWidth="2"
+            strokeLinecap="round"
+            opacity="0.55"
+          />
+
+          {/* Specular reflection */}
+          <path
+            d="M22 46
+               C30 26, 40 26, 48 46"
+            fill="none"
+            stroke="#FFFFFF"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+            opacity="0.18"
+          />
         </g>
       );
     case 'chest':
       return (
         <g>
-          <rect x="16" y="38" width="48" height="28" rx="3" fill="#5D3A1A" stroke={`url(#goldG-${id})`} strokeWidth="2" />
-          <path d="M16 38 L22 26 L58 26 L64 38 Z" fill="#8B4513" stroke={`url(#goldG-${id})`} strokeWidth="2" />
-          <rect x="34" y="42" width="12" height="14" rx="2" fill={`url(#goldG-${id})`} />
-          <ellipse cx="40" cy="32" rx="16" ry="10" fill="#FFC94A" opacity="0.35" />
+          {/* Open chest base */}
+          <rect
+            x="14"
+            y="40"
+            width="52"
+            height="26"
+            rx="4"
+            fill="#3b2311"
+            stroke={`url(#goldG-${id})`}
+            strokeWidth="2"
+          />
+          {/* Lid (open) */}
+          <path
+            d="M16 40
+               L22 28
+               Q40 18 58 28
+               L64 40 Z"
+            fill="#5D3A1A"
+            stroke={`url(#goldG-${id})`}
+            strokeWidth="2"
+          />
+
+          {/* Lock plate */}
+          <rect x="32" y="44" width="16" height="14" rx="3" fill={`url(#goldG-${id})`} opacity="0.95" />
+          <circle cx="40" cy="51" r="2.6" fill="#00FF9C" opacity="0.85" />
+
+          {/* Coins */}
+          <g opacity="0.98">
+            <ellipse cx="34" cy="58" rx="8" ry="4" fill="#FFC94A" opacity="0.85" />
+            <ellipse cx="44" cy="56" rx="9" ry="4.6" fill="#FFC94A" opacity="0.92" />
+            <ellipse cx="40" cy="60" rx="7" ry="3.8" fill="#F5D76E" opacity="0.95" />
+            <circle cx="50" cy="55" r="2.6" fill="#1FE3B4" opacity="0.55" />
+            <circle cx="28" cy="57" r="2.2" fill="#00FF9C" opacity="0.4" />
+          </g>
+
+          {/* Light escaping */}
+          <g opacity="0.85">
+            <path d="M28 38 L40 30 L52 38" fill="none" stroke="#1FE3B4" strokeWidth="3" strokeLinecap="round" />
+            <path d="M24 40 L40 34 L56 40" fill="none" stroke="#FFC94A" strokeWidth="2" strokeLinecap="round" opacity="0.35" />
+            <ellipse cx="40" cy="46" rx="14" ry="10" fill="#1FE3B4" opacity="0.08" />
+          </g>
         </g>
       );
     case 'wild':
       return (
         <g>
-          <ellipse cx="40" cy="42" rx="20" ry="16" fill={`url(#tealG-${id})`} opacity="0.9" />
-          <ellipse cx="40" cy="40" rx="8" ry="12" fill="#050B14" />
-          <ellipse cx="40" cy="38" rx="4" ry="6" fill="#00FF9C" />
-          <ellipse cx="38" cy="36" rx="1.5" ry="2" fill="#fff" opacity="0.7" />
-          <text x="40" y="68" textAnchor="middle" fontSize="9" fontWeight="bold" fill="#1FE3B4">WILD</text>
+          {/* Kraken eye medallion */}
+          <circle cx="40" cy="40" r="26" fill={`url(#tealG-${id})`} opacity="0.88" />
+          <circle cx="40" cy="40" r="18" fill="#050B14" opacity="0.88" />
+          <ellipse cx="40" cy="38" rx="10" ry="14" fill="#00FF9C" opacity="0.8" />
+          <ellipse cx="40" cy="40" rx="4.2" ry="6.2" fill="#FFF0A8" opacity="0.95" />
+
+          {/* Tentacle coils ring */}
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <path
+              key={i}
+              d={`M40 20
+                  C${28 + i * 2} ${24 + i * 2}, ${18 + i * 3} ${34 + i * 1.5}, 40 60`}
+              fill="none"
+              stroke="#1FE3B4"
+              strokeWidth="2"
+              opacity="0.25"
+              strokeLinecap="round"
+            />
+          ))}
+
+          {/* Suction cups */}
+          {[0, 1, 2, 3, 4].map((i) => (
+            <circle
+              key={i}
+              cx={40 + Math.cos((i * Math.PI) / 2.5) * (18 - i * 1.6)}
+              cy={40 + Math.sin((i * Math.PI) / 2.5) * (14 - i * 1.2)}
+              r={3.5 - i * 0.35}
+              fill="#1FE3B4"
+              opacity="0.18"
+            />
+          ))}
+
+          {/* Reflection streak */}
+          <path
+            d="M28 30 C32 24, 38 22, 46 24"
+            fill="none"
+            stroke="#FFFFFF"
+            strokeWidth="3"
+            strokeLinecap="round"
+            opacity="0.14"
+          />
         </g>
       );
     case 'scatter':
       return (
         <g>
-          <ellipse cx="40" cy="42" rx="26" ry="22" fill="#0A1A2E" stroke="#1FE3B4" strokeWidth="2" />
+          {/* Kraken eye scatter */}
+          <ellipse cx="40" cy="42" rx="26" ry="22" fill="#041625" stroke="#FFC94A" strokeWidth="2.6" opacity="0.95" />
+          <ellipse cx="40" cy="42" rx="16" ry="12" fill="#00FF9C" opacity="0.18" />
+          <ellipse cx="40" cy="40" rx="11" ry="14" fill="#00FF9C" opacity="0.6" />
+          <ellipse cx="40" cy="42" rx="4.4" ry="6.2" fill="#050B14" opacity="0.95" />
+
+          {/* Eyelid glow rings */}
+          <path
+            d="M18 42 C24 34, 32 30, 40 30 C48 30, 56 34, 62 42"
+            fill="none"
+            stroke="#1FE3B4"
+            strokeWidth="3"
+            opacity="0.22"
+            strokeLinecap="round"
+          />
+          <path
+            d="M20 48 C28 43, 34 40, 40 40 C46 40, 52 43, 60 48"
+            fill="none"
+            stroke="#FFC94A"
+            strokeWidth="2"
+            opacity="0.22"
+            strokeLinecap="round"
+          />
+
+          {/* Tentacle sparks */}
           {[-1, 0, 1].map((i) => (
-            <path key={i} d={`M${20 + i * 20} 55 Q${15 + i * 25} 35 ${25 + i * 15} 25`} fill="none" stroke="#1A4A3A" strokeWidth="4" strokeLinecap="round" />
+            <path
+              key={i}
+              d={`M${22 + i * 18} 58
+                 Q${16 + i * 20} 44, ${26 + i * 14} 28`}
+              fill="none"
+              stroke="#1FE3B4"
+              strokeWidth="3.8"
+              strokeLinecap="round"
+              opacity="0.25"
+            />
           ))}
-          <ellipse cx="40" cy="35" rx="10" ry="8" fill="#00FF9C" opacity="0.8" />
-          <ellipse cx="40" cy="34" rx="4" ry="5" fill="#050B14" />
         </g>
       );
   }
