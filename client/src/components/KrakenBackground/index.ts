@@ -1,0 +1,2 @@
+export { KrakenBackground } from './KrakenBackground';
+

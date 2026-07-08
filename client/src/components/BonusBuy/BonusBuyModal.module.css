@@ -1,0 +1,132 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(2, 6, 12, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(8px);
+}
+
+.tablet {
+  position: relative;
+  background: linear-gradient(160deg, #0c1b2e 0%, #050b14 100%);
+  border-radius: 16px;
+  padding: 28px 24px;
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+}
+
+.runeBorder {
+  position: absolute;
+  inset: -3px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #1FE3B4, #0A4A40, #1FE3B4);
+  z-index: -1;
+  animation: rune-pulse 2s ease-in-out infinite;
+}
+
+.tablet h2 {
+  font-family: var(--font-display);
+  color: #FFC94A;
+  font-size: 1.4rem;
+  margin-bottom: 4px;
+}
+
+.sub {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+}
+
+.tiers {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.tier {
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(31,227,180,0.2);
+  color: var(--text);
+  transition: all 0.15s;
+}
+
+.tier:hover, .tierActive {
+  border-color: #1FE3B4;
+  background: rgba(31,227,180,0.08);
+  box-shadow: 0 0 16px rgba(31,227,180,0.15);
+}
+
+.tierName {
+  display: block;
+  font-weight: 700;
+  color: #FFC94A;
+  font-size: 0.9rem;
+}
+
+.tierCost {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 800;
+  margin: 4px 0;
+}
+
+.tierDesc {
+  display: block;
+  font-size: 0.65rem;
+  color: var(--text-dim);
+}
+
+.confirmBox {
+  background: rgba(255,201,74,0.08);
+  border: 1px solid rgba(255,201,74,0.3);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+}
+
+.confirmActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.cancelBtn, .confirmBtn, .closeBtn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.cancelBtn {
+  background: rgba(255,255,255,0.06);
+  color: var(--text-dim);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.confirmBtn {
+  background: linear-gradient(180deg, #1FE3B4, #0A6A50);
+  color: #050B14;
+}
+
+.closeBtn {
+  width: 100%;
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+@keyframes rune-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}

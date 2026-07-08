@@ -1,0 +1,75 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.oceanBg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 120% 90% at 50% 120%, rgba(0, 255, 198, 0.18) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 55% at 80% 5%, rgba(255, 201, 74, 0.09) 0%, transparent 52%),
+    radial-gradient(ellipse 60% 45% at 10% 25%, rgba(120, 80, 220, 0.10) 0%, transparent 55%),
+    /* Sun rays */
+    repeating-linear-gradient(
+      115deg,
+      rgba(31, 227, 180, 0.00) 0px,
+      rgba(31, 227, 180, 0.10) 160px,
+      rgba(31, 227, 180, 0.00) 360px
+    ),
+    /* Deep ocean base */
+    linear-gradient(180deg, #0397d7 0%, #05638f 35%, #033a56 70%, #022338 100%);
+}
+
+.vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.35) 100%);
+}
+
+.main {
+  flex: 1;
+  position: relative;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  min-height: 0;
+}
+
+.paytableBtn {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  z-index: 20;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(6, 13, 24, 0.9);
+  border: 1px solid rgba(201, 162, 39, 0.25);
+  color: var(--text-dim);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.error {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  background: #c0392b;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(192, 57, 43, 0.4);
+}

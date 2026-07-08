@@ -1,0 +1,87 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  pointer-events: none;
+}
+
+.flash {
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(circle at 50% 45%, rgba(31, 227, 180, 0.22) 0%, transparent 52%);
+  animation: rage-flash 0.75s ease-out forwards;
+}
+
+.roar {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  color: #FFC94A;
+  font-size: 1.35rem;
+  text-shadow: 0 0 30px rgba(255, 201, 74, 0.55);
+  opacity: 0;
+  animation: roar-pop 0.75s ease-out forwards;
+}
+
+.particles {
+  position: absolute;
+  inset: 0;
+}
+
+.particle {
+  position: absolute;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 201, 74, 1) 0%, rgba(31, 227, 180, 0.95) 45%, rgba(0, 0, 0, 0) 72%);
+  opacity: 0;
+  animation: particle-fly 0.75s ease-out forwards;
+  box-shadow: 0 0 18px rgba(31, 227, 180, 0.18);
+}
+
+@keyframes rage-flash {
+  0% {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes roar-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -55%) scale(0.9);
+  }
+  25% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+}
+
+@keyframes particle-fly {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.6);
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx, 0px), var(--dy, -20px)) scale(1.2);
+  }
+}
+

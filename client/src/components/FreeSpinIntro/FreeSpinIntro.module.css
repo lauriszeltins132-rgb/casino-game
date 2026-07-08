@@ -1,0 +1,111 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  background: rgba(2,6,12,0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+}
+
+.card {
+  text-align: center;
+  padding: 48px 36px;
+  border: 2px solid #1FE3B4;
+  border-radius: 20px;
+  background: linear-gradient(160deg, rgba(12,27,46,0.95), rgba(5,11,20,0.98));
+  animation: pop 0.5s ease-out;
+  box-shadow: 0 0 60px rgba(31,227,180,0.25);
+}
+
+.card h2 {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  color: #FFC94A;
+  margin-bottom: 8px;
+}
+
+.count {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #1FE3B4;
+  margin-bottom: 8px;
+}
+
+.sub {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin-bottom: 20px;
+}
+
+.tap {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+.cinematic {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: #050B14;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: cinematic-fade 2.5s ease-out forwards;
+  overflow: hidden;
+}
+
+.heroArt {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.85;
+}
+
+.shake {
+  position: relative;
+  z-index: 1;
+  animation: shake 0.5s ease-in-out 3;
+  text-align: center;
+}
+
+.krakenBurst {
+  width: 200px;
+  height: 200px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #00FF9C 0%, #1FE3B4 30%, transparent 70%);
+  animation: burst 1s ease-out;
+}
+
+.cinematic h2 {
+  font-family: var(--font-display);
+  color: #1FE3B4;
+  font-size: 1.8rem;
+  letter-spacing: 0.15em;
+}
+
+@keyframes pop {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes cinematic-fade {
+  0% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; pointer-events: none; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+
+@keyframes burst {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1.5); opacity: 1; }
+}
