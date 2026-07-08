@@ -11,10 +11,18 @@
   inset: 0;
   z-index: 0;
   background:
-    radial-gradient(ellipse 100% 80% at 50% 120%, rgba(26, 82, 118, 0.4) 0%, transparent 50%),
-    radial-gradient(ellipse 60% 40% at 80% 10%, rgba(46, 204, 113, 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse 50% 30% at 10% 30%, rgba(108, 52, 131, 0.08) 0%, transparent 50%),
-    linear-gradient(180deg, #020608 0%, #0a1628 35%, #061018 70%, #020810 100%);
+    radial-gradient(ellipse 120% 90% at 50% 120%, rgba(0, 255, 198, 0.18) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 55% at 80% 5%, rgba(255, 201, 74, 0.09) 0%, transparent 52%),
+    radial-gradient(ellipse 60% 45% at 10% 25%, rgba(120, 80, 220, 0.10) 0%, transparent 55%),
+    /* Sun rays */
+    repeating-linear-gradient(
+      115deg,
+      rgba(31, 227, 180, 0.00) 0px,
+      rgba(31, 227, 180, 0.10) 160px,
+      rgba(31, 227, 180, 0.00) 360px
+    ),
+    /* Deep ocean base */
+    linear-gradient(180deg, #0397d7 0%, #05638f 35%, #033a56 70%, #022338 100%);
 }
 
 .vignette {
