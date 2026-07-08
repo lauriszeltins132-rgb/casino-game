@@ -10,9 +10,10 @@ import { Paytable } from './components/Paytable';
 import { WinOverlay } from './components/WinEffects';
 import { BonusBuyModal } from './components/BonusBuy';
 import { AutoplayModal } from './components/Autoplay';
-import { FreeSpinIntro, BonusCinematic } from './components/FreeSpinIntro';
+import { FreeSpinIntro } from './components/FreeSpinIntro';
 import { audio } from './audio/AudioManager';
 import { RageFlashOverlay } from './components/RageFlashOverlay';
+import { BonusBuyCinematic } from './components/BonusBuy';
 import type {
   AutoplaySettings,
   BonusBuyTier,
@@ -42,6 +43,7 @@ export default function App() {
   const [showAutoplay, setShowAutoplay] = useState(false);
   const [showFsIntro, setShowFsIntro] = useState(false);
   const [showCinematic, setShowCinematic] = useState(false);
+  const [bonusCinematicTier, setBonusCinematicTier] = useState<BonusBuyTier | null>(null);
   const [pendingFs, setPendingFs] = useState(0);
   const [fsSessionId, setFsSessionId] = useState<string | null>(null);
   const [fsRemaining, setFsRemaining] = useState(0);
@@ -238,31 +240,8 @@ export default function App() {
 
   const handleBonusBuyConfirm = async (tier: BonusBuyTier) => {
     setShowBonusBuy(false);
+    setBonusCinematicTier(tier);
     setShowCinematic(true);
-    audio.play('bonus_enter');
-
-    setTimeout(async () => {
-      setShowCinematic(false);
-      setPhase('spinning');
-      try {
-        const result = await api.bonusBuy(betRef.current, tier);
-        resultRef.current = result;
-        setGrid(result.grid);
-        setBalance(result.balance);
-        balanceRef.current = result.balance;
-        setAnticipation(true);
-        if (config) setWinningCells(getWinningCells(result.lineWins, config.paylines));
-        if (result.freeSpinState) {
-          setFsSessionId(result.freeSpinState.sessionId);
-          setFsRemaining(result.freeSpinState.remaining);
-          fsIdRef.current = result.freeSpinState.sessionId;
-          setPendingFs(result.freeSpinsAwarded);
-        }
-      } catch (err) {
-        setError((err as Error).message);
-        setPhase('idle');
-      }
-    }, 2500);
   };
 
   const handleFsIntroStart = () => {
@@ -350,7 +329,53 @@ export default function App() {
       />
 
       {showFsIntro && <FreeSpinIntro spins={pendingFs} onStart={handleFsIntroStart} />}
-      {showCinematic && <BonusCinematic onComplete={() => setShowCinematic(false)} />}
+      {showCinematic &&
+        bonusCinematicTier &&
+        config && (
+          <BonusBuyCinematic
+            tier={bonusCinematicTier}
+            bet={bet}
+            rewardMultiplier={
+              config.bonusBuyTiers.find((t) => t.id === bonusCinematicTier)?.costMultiplier ?? 0
+            }
+            freeSpins={
+              config.bonusBuyTiers.find((t) => t.id === bonusCinematicTier)?.spins ?? 0
+            }
+            onEnterBonus={async () => {
+              // Enter the real bonus flow (server RNG + RTP logic)
+              const tierToUse = bonusCinematicTier;
+              if (!tierToUse) return;
+
+              setShowCinematic(false);
+              setBonusCinematicTier(null);
+              setWin(0);
+              setWinningCells(new Set());
+              setInkOrbs([]);
+
+              try {
+                const result = await api.bonusBuy(betRef.current, tierToUse);
+                resultRef.current = result;
+                setGrid(result.grid);
+                setLastResult(result);
+                setBalance(result.balance);
+                balanceRef.current = result.balance;
+                setAnticipation(result.anticipation);
+                if (config) setWinningCells(getWinningCells(result.lineWins, config.paylines));
+
+                if (result.freeSpinState) {
+                  setFsSessionId(result.freeSpinState.sessionId);
+                  setFsRemaining(result.freeSpinState.remaining);
+                  fsIdRef.current = result.freeSpinState.sessionId;
+                }
+
+                setPhase('spinning');
+              } catch (err) {
+                setError((err as Error).message);
+                setPhase('idle');
+              }
+            }}
+          />
+        )}
 
       <RealityCheck show={showReality} onDismiss={() => setShowReality(false)} />
 

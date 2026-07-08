@@ -1,0 +1,456 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  pointer-events: auto;
+  background: rgba(5, 11, 20, 0.65);
+}
+
+.darken {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 40%, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.55) 70%);
+}
+
+.cameraShake {
+  position: absolute;
+  inset: 0;
+  animation: camera-shake 1.1s ease-in-out infinite;
+  opacity: 0;
+}
+
+.overlay[data-stage='intro'] .cameraShake,
+.overlay[data-stage='eye'] .cameraShake {
+  opacity: 1;
+}
+
+@keyframes camera-shake {
+  0% {
+    transform: translate(0, 0);
+  }
+  15% {
+    transform: translate(-2px, 1px) rotate(-0.15deg);
+  }
+  30% {
+    transform: translate(3px, -1px) rotate(0.15deg);
+  }
+  45% {
+    transform: translate(-1px, -2px) rotate(-0.1deg);
+  }
+  60% {
+    transform: translate(2px, 2px) rotate(0.1deg);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+.heroArt {
+  position: absolute;
+  inset: -6%;
+  width: 112%;
+  height: 112%;
+  object-fit: cover;
+  filter: saturate(1.04) contrast(1.03);
+}
+
+.tentacles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.tentacleLeft,
+.tentacleRight {
+  position: absolute;
+  top: 12%;
+  width: 180px;
+  height: 460px;
+  opacity: 0;
+  border-radius: 120px;
+  background: radial-gradient(circle at 50% 15%, rgba(31, 227, 180, 0.35) 0%, rgba(31, 227, 180, 0) 60%),
+    radial-gradient(circle at 45% 40%, rgba(245, 215, 110, 0.18) 0%, rgba(0, 0, 0, 0) 65%),
+    linear-gradient(180deg, rgba(0, 255, 156, 0.15) 0%, rgba(0, 0, 0, 0) 75%);
+  filter: drop-shadow(0 0 18px rgba(31, 227, 180, 0.08));
+}
+
+.tentacleLeft {
+  left: -10%;
+  transform: rotate(-8deg) translateY(30px);
+}
+
+.tentacleRight {
+  right: -10%;
+  transform: rotate(8deg) translateY(30px);
+}
+
+.overlay[data-stage='intro'] .tentacleLeft,
+.overlay[data-stage='intro'] .tentacleRight,
+.overlay[data-stage='eye'] .tentacleLeft,
+.overlay[data-stage='eye'] .tentacleRight,
+.overlay[data-stage='pick'] .tentacleLeft,
+.overlay[data-stage='pick'] .tentacleRight,
+.overlay[data-stage='opening'] .tentacleLeft,
+.overlay[data-stage='opening'] .tentacleRight {
+  opacity: 1;
+}
+
+.overlay[data-stage='intro'] .tentacleLeft {
+  animation: tentacle-in-left 1.2s ease-out forwards;
+}
+
+.overlay[data-stage='intro'] .tentacleRight {
+  animation: tentacle-in-right 1.2s ease-out forwards;
+}
+
+@keyframes tentacle-in-left {
+  0% {
+    transform: rotate(-10deg) translateY(55px) translateX(0);
+  }
+  60% {
+    transform: rotate(-8deg) translateY(0px) translateX(12px);
+  }
+  100% {
+    transform: rotate(-7deg) translateY(15px) translateX(0);
+  }
+}
+
+@keyframes tentacle-in-right {
+  0% {
+    transform: rotate(10deg) translateY(55px) translateX(0);
+  }
+  60% {
+    transform: rotate(8deg) translateY(0px) translateX(-12px);
+  }
+  100% {
+    transform: rotate(7deg) translateY(15px) translateX(0);
+  }
+}
+
+.eyeStage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 110px;
+  pointer-events: none;
+}
+
+.eyeSymbol {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.eyeRing {
+  position: absolute;
+  inset: -6px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(31, 227, 180, 0.35) 0%, rgba(255, 201, 74, 0.12) 30%, transparent 62%);
+  opacity: 0;
+}
+
+.eyeOpenWrap {
+  transform: scaleY(0.12);
+  opacity: 0.3;
+  filter: blur(1px);
+  transition: transform 0.8s ease, opacity 0.8s ease, filter 0.8s ease;
+  transform-origin: center;
+}
+
+.overlay[data-stage='eye'] .eyeOpenWrap,
+.overlay[data-stage='pick'] .eyeOpenWrap,
+.overlay[data-stage='opening'] .eyeOpenWrap {
+  transform: scaleY(1);
+  opacity: 1;
+  filter: blur(0px);
+}
+
+.overlay[data-stage='eye'] .eyeRing,
+.overlay[data-stage='pick'] .eyeRing {
+  animation: eye-ring-pulse 1.2s ease-in-out infinite;
+  opacity: 1;
+}
+
+@keyframes eye-ring-pulse {
+  0%, 100% {
+    transform: scale(0.98);
+    filter: saturate(1) brightness(1);
+  }
+  50% {
+    transform: scale(1.08);
+    filter: saturate(1.25) brightness(1.08);
+  }
+}
+
+.eyeCaption {
+  margin-top: 18px;
+  font-family: var(--font-display);
+  font-weight: 900;
+  color: #FFC94A;
+  letter-spacing: 0.22em;
+  font-size: 0.7rem;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.overlay[data-stage='eye'] .eyeCaption,
+.overlay[data-stage='pick'] .eyeCaption,
+.overlay[data-stage='opening'] .eyeCaption {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.chamber {
+  position: absolute;
+  left: 50%;
+  bottom: 70px;
+  transform: translateX(-50%);
+  width: min(740px, 94vw);
+  height: 300px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(5, 11, 20, 0.15) 0%, rgba(0, 0, 0, 0.55) 100%);
+  border: 1px solid rgba(139, 115, 85, 0.25);
+  box-shadow: inset 0 0 35px rgba(31, 227, 180, 0.08), 0 25px 80px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transition: opacity 0.7s ease, transform 0.7s ease;
+  overflow: hidden;
+}
+
+.overlay[data-stage='pick'] .chamber,
+.overlay[data-stage='opening'] .chamber {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-6px);
+}
+
+.doorFrame {
+  position: absolute;
+  left: 50%;
+  top: 18px;
+  transform: translateX(-50%);
+  width: 76%;
+  height: 150px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(139, 115, 85, 0.25), rgba(0, 0, 0, 0.2));
+  box-shadow: inset 0 0 18px rgba(255, 201, 74, 0.12);
+}
+
+.doorFrame::before {
+  content: '';
+  position: absolute;
+  inset: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 201, 74, 0.12);
+  background: radial-gradient(circle at 50% 15%, rgba(31, 227, 180, 0.12) 0%, transparent 55%);
+}
+
+.chests {
+  position: absolute;
+  left: 50%;
+  top: 112px;
+  transform: translateX(-50%);
+  width: 86%;
+  display: flex;
+  gap: 18px;
+  justify-content: center;
+}
+
+.chestBtn {
+  flex: 1;
+  max-width: 190px;
+  height: 132px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+}
+
+.chestBtn:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.chestTop {
+  width: 100%;
+  height: 22px;
+  border-radius: 10px 10px 6px 6px;
+  background: linear-gradient(180deg, rgba(255, 201, 74, 0.18), rgba(0, 0, 0, 0.35));
+  border: 1px solid rgba(255, 201, 74, 0.18);
+  box-shadow: inset 0 0 12px rgba(31, 227, 180, 0.1);
+}
+
+.chestBody {
+  height: 86px;
+  border-radius: 10px;
+  margin-top: 8px;
+  border: 1px solid rgba(139, 115, 85, 0.25);
+  background: radial-gradient(circle at 45% 35%, rgba(255, 201, 74, 0.12) 0%, rgba(0, 0, 0, 0.35) 55%, rgba(0, 0, 0, 0.6) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  animation: chest-float 2.6s ease-in-out infinite;
+  box-shadow: inset 0 0 20px rgba(31, 227, 180, 0.06);
+}
+
+.chestBody::after {
+  content: '';
+  position: absolute;
+  inset: -30% -10%;
+  background: linear-gradient(110deg, transparent 0%, rgba(255, 201, 74, 0.22) 40%, transparent 70%);
+  transform: translateX(-35%);
+  opacity: 0.35;
+  animation: chest-shimmer 2.1s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes chest-float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes chest-shimmer {
+  0%, 100% {
+    transform: translateX(-35%);
+  }
+  50% {
+    transform: translateX(35%);
+  }
+}
+
+.chestTag {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: rgba(232, 237, 245, 0.7);
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.overlay[data-stage='opening'] .chestBtn[data-state='picked'] .chestBody {
+  animation: none;
+  border-color: rgba(31, 227, 180, 0.45);
+  box-shadow: 0 0 34px rgba(31, 227, 180, 0.18);
+}
+
+.overlay[data-stage='opening'] .chestBtn[data-state='picked'] .chestBody::after {
+  opacity: 1;
+  animation: none;
+}
+
+.overlay[data-stage='opening'] .chestBtn[data-state='picked'] .chestBody {
+  position: relative;
+}
+
+.overlay[data-stage='opening'] .chestBtn[data-state='picked'] .chestBody::before {
+  content: '';
+  position: absolute;
+  inset: -40%;
+  background: radial-gradient(circle at 50% 20%, rgba(255, 201, 74, 0.55) 0%, rgba(31, 227, 180, 0.25) 30%, transparent 65%);
+  animation: lock-break 1.8s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes lock-break {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.18);
+  }
+}
+
+.reward {
+  position: absolute;
+  left: 50%;
+  top: 218px;
+  transform: translateX(-50%);
+  width: 88%;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.overlay[data-stage='opening'] .reward {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-6px);
+}
+
+.rewardLine {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  letter-spacing: 0.08em;
+  color: #FFC94A;
+  font-weight: 900;
+  text-shadow: 0 0 35px rgba(255, 201, 74, 0.2);
+}
+
+.rewardSub {
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.goldParticles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.goldParticle {
+  position: absolute;
+  left: calc(var(--i) * 3%);
+  top: 25%;
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 201, 74, 1) 0%, rgba(31, 227, 180, 0.5) 45%, transparent 70%);
+  opacity: 0;
+}
+
+.overlay[data-stage='intro'] .goldParticle,
+.overlay[data-stage='eye'] .goldParticle {
+  opacity: 1;
+  animation: gold-fly 2.6s ease-out forwards;
+}
+
+.overlay[data-stage='pick'] .goldParticle {
+  opacity: 0.5;
+}
+
+@keyframes gold-fly {
+  0% {
+    transform: translate(0, 0) scale(0.8);
+    filter: blur(0px);
+  }
+  30% {
+    transform: translate(calc(-30px + (var(--i) * 2px)), -40px) scale(1.1);
+    filter: blur(0.2px);
+  }
+  100% {
+    transform: translate(calc(60px - (var(--i) * 3px)), 130px) scale(0.3);
+    filter: blur(1px);
+    opacity: 0;
+  }
+}
+

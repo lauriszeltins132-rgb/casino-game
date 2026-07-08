@@ -27,8 +27,8 @@ export function BonusBuyModal({ open, bet, tiers, onConfirm, onClose }: Props) {
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.tablet} onClick={(e) => e.stopPropagation()}>
         <div className={styles.runeBorder} />
-        <h2>Summon the Kraken</h2>
-        <p className={styles.sub}>Select a bonus buy tier — prices shown for current bet</p>
+        <h2>BUY KRAKEN&apos;S LAIR</h2>
+        <p className={styles.sub}>Choose your lair entry — prices shown for current bet</p>
 
         <div className={styles.tiers}>
           {tiers.map((t) => (
@@ -55,7 +55,7 @@ export function BonusBuyModal({ open, bet, tiers, onConfirm, onClose }: Props) {
                 Cancel
               </button>
               <button type="button" className={styles.confirmBtn} onClick={handleConfirm}>
-                Summon
+                Buy
               </button>
             </div>
           </div>
