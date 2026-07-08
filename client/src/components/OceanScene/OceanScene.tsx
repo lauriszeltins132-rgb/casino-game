@@ -191,6 +191,7 @@ export function OceanScene({ intensity = 'base', bigWin = false }: Props) {
       // Kraken layer: only fades in during bonus / freespin intensity
       const krakenLayer = new Container();
       const krakenTentacles: Graphics[] = [];
+      const krakenSplashRings: { g: Graphics; age: number; x: number; y: number }[] = [];
       const TENTACLE_COUNT = 7;
 
       for (let i = 0; i < TENTACLE_COUNT; i++) {
@@ -209,6 +210,16 @@ export function OceanScene({ intensity = 'base', bigWin = false }: Props) {
       // Additional rays in bonus/freespin
       const rays = new Graphics();
       root.addChildAt(rays, 1);
+
+      function spawnKrakenSplash() {
+        const g = new Graphics();
+        root.addChildAt(g, 4);
+        const W = w();
+        const H = h();
+        const x = W * 0.52 + krakenShiftX * 0.15 + (Math.random() * 2 - 1) * 60;
+        const y = H * 0.66 + Math.random() * 60;
+        krakenSplashRings.push({ g, age: 0, x, y });
+      }
 
       function lerp(a: number, b: number, t: number) {
         return a + (b - a) * t;
@@ -401,7 +412,11 @@ export function OceanScene({ intensity = 'base', bigWin = false }: Props) {
         // Moving rays layer
         raysPhase += dt * 0.025;
         rays.clear();
-        const showKraken = intensity === 'bonus' || intensity === 'freespin';
+        const showKraken =
+          intensity === 'bonus' ||
+          intensity === 'freespin' ||
+          intensity === 'base' ||
+          bigWin;
         const rayCount = showKraken ? 5 : 3;
         const rayAlpha = showKraken ? 0.2 : 0.1;
         for (let i = 0; i < rayCount; i++) {
@@ -495,16 +510,47 @@ export function OceanScene({ intensity = 'base', bigWin = false }: Props) {
           }
         }
 
-        // Kraken movement: occasional left/right sway + tentacle splashes
+        // Kraken movement: occasional left/right sway + subtle splash ripples
         if (showKraken) {
           krakenMoveTimer += dt;
           if (krakenMoveTimer > 6 + Math.sin(t * 0.1) * 2) {
             krakenMoveTimer = 0;
             krakenTargetShiftX = (Math.random() * 2 - 1) * 90;
+            spawnKrakenSplash();
           }
           krakenShiftX = lerp(krakenShiftX, krakenTargetShiftX, 0.035 + dt * 0.05);
-          // Fade-in
-          drawKrakenBackdrop(0.92);
+
+          // Fade-in based on intensity: always present in base, stronger in bonus/free spins.
+          const targetAlpha =
+            intensity === 'bonus' || intensity === 'freespin'
+              ? 0.92
+              : bigWin
+                ? 0.62
+                : intensity === 'anticipation'
+                  ? 0.48
+                  : 0.28;
+          drawKrakenBackdrop(targetAlpha);
+
+          // Update splash rings
+          for (let i = krakenSplashRings.length - 1; i >= 0; i--) {
+            const r = krakenSplashRings[i];
+            r.age += dt;
+            const life = 1.25;
+            if (r.age > life) {
+              root.removeChild(r.g);
+              r.g.destroy();
+              krakenSplashRings.splice(i, 1);
+              continue;
+            }
+            const t01 = r.age / life;
+            const alpha = Math.pow(1 - t01, 2) * 0.42;
+            const radius = 18 + t01 * 90;
+            r.g.clear();
+            r.g.lineStyle(3, 0x1fe3b4, alpha);
+            r.g.beginFill(0x1fe3b4, alpha * 0.12);
+            r.g.drawCircle(r.x, r.y, radius);
+            r.g.endFill();
+          }
         } else {
           krakenShiftX = lerp(krakenShiftX, 0, 0.05);
           drawKrakenBackdrop(0);
