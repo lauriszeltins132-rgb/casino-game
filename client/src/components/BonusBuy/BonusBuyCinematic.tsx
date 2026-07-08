@@ -111,6 +111,10 @@ export function BonusBuyCinematic({
 
       <div className={styles.waterDistortion} aria-hidden />
 
+      <div className={styles.waterExplosion} aria-hidden />
+
+      <div className={styles.treasureAura} aria-hidden />
+
       <div className={styles.tentacles} aria-hidden>
         <div className={styles.tentacleLeft} />
         <div className={styles.tentacleRight} />

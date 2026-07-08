@@ -132,6 +132,74 @@
   opacity: 1;
 }
 
+.waterExplosion {
+  position: absolute;
+  left: 50%;
+  top: 54%;
+  width: min(780px, 95vw);
+  height: 320px;
+  transform: translate(-50%, -50%) scale(0.6);
+  opacity: 0;
+  border-radius: 999px;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 201, 74, 0.18) 0%, rgba(31, 227, 180, 0.10) 30%, rgba(0, 255, 156, 0.0) 64%);
+  filter: blur(1px);
+  pointer-events: none;
+}
+
+.overlay[data-stage='eye'] .waterExplosion,
+.overlay[data-stage='pick'] .waterExplosion,
+.overlay[data-stage='opening'] .waterExplosion {
+  opacity: 1;
+  animation: water-explode 1.05s ease-out forwards;
+}
+
+@keyframes water-explode {
+  0% {
+    transform: translate(-50%, -50%) scale(0.65);
+    filter: blur(2px);
+  }
+  35% {
+    transform: translate(-50%, -50%) scale(1.05);
+    filter: blur(1px);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.2);
+    filter: blur(3px);
+  }
+}
+
+.treasureAura {
+  position: absolute;
+  left: 50%;
+  top: 54%;
+  width: min(520px, 86vw);
+  height: 260px;
+  transform: translate(-50%, -50%) scale(0.85);
+  opacity: 0;
+  border-radius: 999px;
+  background: radial-gradient(circle at 50% 55%, rgba(255, 201, 74, 0.25) 0%, rgba(31, 227, 180, 0.14) 35%, rgba(0, 0, 0, 0) 68%);
+  box-shadow: 0 0 90px rgba(31, 227, 180, 0.18);
+  pointer-events: none;
+}
+
+.overlay[data-stage='pick'] .treasureAura,
+.overlay[data-stage='opening'] .treasureAura {
+  opacity: 1;
+  animation: treasure-aura-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes treasure-aura-pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(0.88);
+    filter: saturate(1) brightness(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.02);
+    filter: saturate(1.25) brightness(1.15);
+  }
+}
+
 .overlay[data-stage='intro'] .tentacleLeft {
   animation: tentacle-in-left 1.9s ease-out forwards;
 }
