@@ -6,9 +6,23 @@ interface Props {
   bigWin?: boolean;
 }
 
+function isSafari(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent;
+  // Safari detection: includes "Safari" but not Chrome/Chromium/Android.
+  return /Safari/i.test(ua) && !/Chrome|Chromium|Android/i.test(ua);
+}
+
 export function OceanScene({ intensity = 'base', bigWin = false }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<Application | null>(null);
+
+  // Pixi canvas resize can throw in Safari (observed: "this._canvasResize is not a function").
+  // We intentionally disable Pixi on Safari so the UI never crashes; the game keeps its
+  // bright CSS ocean + KrakenBackground layers as the fallback.
+  if (isSafari()) {
+    return null;
+  }
 
   useEffect(() => {
     if (!containerRef.current) return;
