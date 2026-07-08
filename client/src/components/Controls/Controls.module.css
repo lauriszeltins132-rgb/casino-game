@@ -71,6 +71,40 @@
   background: linear-gradient(180deg, #1FE3B4 0%, #0A6A50 100%);
   color: #050B14;
   box-shadow: 0 4px 0 #064030, 0 6px 20px rgba(31,227,180,0.3);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.spinBtn::after {
+  content: '';
+  position: absolute;
+  inset: -60% -40%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.35) 40%,
+    transparent 80%
+  );
+  transform: translateX(-120%);
+  opacity: 0;
+}
+
+.spinBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: saturate(1.08);
+  box-shadow: 0 5px 0 #064030, 0 10px 26px rgba(31,227,180,0.38);
+}
+
+.spinBtn:hover:not(:disabled)::after {
+  opacity: 1;
+  transform: translateX(120%);
+  transition: transform 0.55s ease;
+}
+
+.spinBtn:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 3px 0 #064030, 0 6px 16px rgba(31,227,180,0.28);
 }
 
 .spinBtn:disabled { opacity: 0.5; }

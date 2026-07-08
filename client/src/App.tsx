@@ -12,6 +12,7 @@ import { BonusBuyModal } from './components/BonusBuy';
 import { AutoplayModal } from './components/Autoplay';
 import { FreeSpinIntro, BonusCinematic } from './components/FreeSpinIntro';
 import { audio } from './audio/AudioManager';
+import { RageFlashOverlay } from './components/RageFlashOverlay';
 import type {
   AutoplaySettings,
   BonusBuyTier,
@@ -59,6 +60,9 @@ export default function App() {
   const betRef = useRef(bet);
   const balanceRef = useRef(balance);
   const fsIdRef = useRef<string | null>(null);
+  const rageRef = useRef(0);
+  const [rageLevel, setRageLevel] = useState(0);
+  const [ragePulseKey, setRagePulseKey] = useState(0);
 
   phaseRef.current = phase;
   betRef.current = bet;
@@ -149,6 +153,30 @@ export default function App() {
     if (!result) {
       setPhase('idle');
       return;
+    }
+
+    // UI-only: build a dramatic "Rage Meter" based on how punishing the last spin felt.
+    // Does not affect RNG / RTP / payouts.
+    const ratio = result.bet > 0 ? result.totalWin / result.bet : 0;
+    const prev = rageRef.current;
+    let next = prev;
+    if (result.totalWin <= 0 || ratio <= 0.00001) {
+      next = Math.min(100, prev + 12);
+    } else if (ratio >= 10) {
+      next = Math.max(0, prev - 28);
+    } else if (ratio >= 5) {
+      next = Math.max(0, prev - 18);
+    } else {
+      next = Math.max(0, prev - 10);
+    }
+
+    const prevTier = Math.floor(prev / 10);
+    const nextTier = Math.floor(next / 10);
+    rageRef.current = next;
+    setRageLevel(next);
+    if (nextTier > prevTier && nextTier > 0) {
+      setRagePulseKey((k) => k + 1);
+      audio.play('rage_up');
     }
 
     setWin(result.totalWin);
@@ -264,6 +292,8 @@ export default function App() {
         volatility={config?.volatility ?? 'medium-high'}
         freeSpinsRemaining={fsRemaining}
         sessionSeconds={sessionSeconds}
+        rageLevel={rageLevel}
+        ragePulseKey={ragePulseKey}
       />
 
       <main className={styles.main}>
@@ -284,6 +314,8 @@ export default function App() {
       <button type="button" className={styles.paytableBtn} onClick={() => setShowPaytable(true)}>
         Paytable
       </button>
+
+      <RageFlashOverlay triggerKey={ragePulseKey} />
 
       <Controls
         bet={bet}

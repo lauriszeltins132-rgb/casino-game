@@ -1,4 +1,5 @@
-import { OdometerWin } from '../Odometer';
+import { OdometerMoney, OdometerWin } from '../Odometer';
+import { RageMeter } from '../RageMeter';
 import styles from './HUD.module.css';
 
 interface Props {
@@ -9,6 +10,8 @@ interface Props {
   volatility: string;
   freeSpinsRemaining?: number;
   sessionSeconds: number;
+  rageLevel?: number; // 0..100
+  ragePulseKey?: number;
 }
 
 export function HUD({
@@ -19,10 +22,9 @@ export function HUD({
   volatility,
   freeSpinsRemaining = 0,
   sessionSeconds,
+  rageLevel = 0,
+  ragePulseKey = 0,
 }: Props) {
-  const fmt = (n: number) =>
-    `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
   const mins = Math.floor(sessionSeconds / 60);
   const secs = sessionSeconds % 60;
 
@@ -46,14 +48,14 @@ export function HUD({
           <span className={styles.icon}>◎</span>
           <div>
             <span className={styles.label}>Balance</span>
-            <span className={styles.value}>{fmt(balance)}</span>
+            <OdometerMoney value={balance} className={styles.value} />
           </div>
         </div>
         <div className={styles.stat}>
           <span className={styles.icon}>◈</span>
           <div>
             <span className={styles.label}>Bet</span>
-            <span className={styles.valueGold}>{fmt(bet)}</span>
+            <OdometerMoney value={bet} className={styles.valueGold} />
           </div>
         </div>
         <div className={`${styles.stat} ${win > 0 ? styles.statWin : ''}`}>
@@ -63,6 +65,8 @@ export function HUD({
             <OdometerWin value={win} />
           </div>
         </div>
+
+        <RageMeter value={rageLevel} pulseKey={ragePulseKey} />
       </div>
     </header>
   );

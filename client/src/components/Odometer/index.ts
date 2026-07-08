@@ -1,1 +1,1 @@
-export { OdometerWin } from './Odometer';
+export { OdometerWin, OdometerMoney } from './Odometer';
