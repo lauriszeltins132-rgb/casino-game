@@ -46,28 +46,109 @@ function render(id: SymbolId) {
     case 'rope':
       return (
         <g>
-          <path d="M20 55 Q25 25 35 30 Q45 35 40 55 Q50 30 55 28 Q60 45 58 58" fill="none" stroke="#C4A060" strokeWidth="5" strokeLinecap="round" />
-          <path d="M22 50 Q28 35 38 38" fill="none" stroke="#8B6914" strokeWidth="2" opacity="0.5" />
+          {/* Rope-knot coin stack (low-tier gold) */}
+          <g opacity="0.98">
+            <ellipse cx="40" cy="48" rx="20" ry="7" fill="#5D3A1A" opacity="0.85" />
+            <ellipse cx="40" cy="44" rx="18" ry="6" fill="#8B6914" opacity="0.9" />
+            <ellipse cx="40" cy="41" rx="16" ry="5.3" fill="#FFC94A" opacity="0.55" />
+          </g>
+          {/* Knot */}
+          <path
+            d="M26 52
+               Q28 42 35 42
+               Q40 42 42 46
+               Q45 52 38 57
+               Q33 60 26 52 Z"
+            fill="#C9A227"
+            opacity="0.65"
+          />
+          <path
+            d="M22 50
+               Q30 30 42 36
+               Q55 42 58 58"
+            fill="none"
+            stroke="#C4A060"
+            strokeWidth="4.5"
+            strokeLinecap="round"
+            opacity="0.9"
+          />
+          <path
+            d="M25 48
+               Q32 34 42 38
+               Q52 42 55 52"
+            fill="none"
+            stroke="#FFFFFF"
+            strokeWidth="2"
+            strokeLinecap="round"
+            opacity="0.18"
+          />
         </g>
       );
     case 'barnacle':
       return (
         <g>
+          {/* Barnacle rock with teal glint */}
+          <path
+            d="M22 56
+               Q26 38 40 34
+               Q54 38 58 56
+               Q40 64 22 56 Z"
+            fill="#2C3E50"
+            opacity="0.88"
+          />
           {[0, 1, 2, 3, 4].map((i) => (
-            <ellipse key={i} cx={28 + i * 6} cy={42 + (i % 2) * 4} rx="5" ry="4" fill="#7A8B8B" stroke="#4A5A5A" strokeWidth="1" />
+            <g key={i}>
+              <ellipse
+                cx={28 + i * 6}
+                cy={44 + (i % 2) * 3}
+                rx="5.2"
+                ry="4.2"
+                fill="#7A8B8B"
+                stroke="#4A5A5A"
+                strokeWidth="1"
+              />
+              {i % 2 === 0 && (
+                <circle cx={28 + i * 6} cy={44} r="1.7" fill="#1FE3B4" opacity="0.7" />
+              )}
+            </g>
           ))}
-          <ellipse cx="40" cy="38" rx="14" ry="10" fill="#6B7B7B" opacity="0.6" />
+          <ellipse cx="40" cy="38" rx="16" ry="11" fill="#6B7B7B" opacity="0.5" />
+          <path
+            d="M28 46 C34 40, 44 40, 52 46"
+            fill="none"
+            stroke="#1FE3B4"
+            strokeWidth="2.2"
+            opacity="0.16"
+          />
         </g>
       );
     case 'anchor_chain':
       return (
-        <g fill="none" stroke="#A0A8B0" strokeWidth="3" strokeLinecap="round">
-          <line x1="40" y1="18" x2="40" y2="55" />
-          <circle cx="40" cy="16" r="6" />
-          <path d="M22 48 Q40 65 58 48" />
-          <line x1="28" y1="40" x2="52" y2="40" />
-          <line x1="30" y1="28" x2="35" y2="33" strokeWidth="2" />
-          <line x1="50" y1="28" x2="45" y2="33" strokeWidth="2" />
+        <g>
+          {/* Anchor */}
+          <path
+            d="M40 18
+               C34 22, 34 28, 40 30
+               C46 28, 46 22, 40 18 Z"
+            fill="#1FE3B4"
+            opacity="0.12"
+          />
+          <g fill="none" stroke="#A0A8B0" strokeWidth="3" strokeLinecap="round">
+            <line x1="40" y1="18" x2="40" y2="58" />
+            <circle cx="40" cy="16" r="6" fill="#050B14" opacity="0.6" stroke="#C9A227" strokeWidth="1" />
+            <path d="M22 52 Q40 70 58 52" />
+            <line x1="28" y1="42" x2="52" y2="42" />
+            <line x1="30" y1="32" x2="35" y2="37" strokeWidth="2" />
+            <line x1="50" y1="32" x2="45" y2="37" strokeWidth="2" />
+          </g>
+          {/* Chain shimmer */}
+          <path
+            d="M36 26 C34 36, 34 46, 36 56"
+            fill="none"
+            stroke="#FFC94A"
+            strokeWidth="2"
+            opacity="0.16"
+          />
         </g>
       );
     case 'wheel':
@@ -108,18 +189,58 @@ function render(id: SymbolId) {
     case 'bell':
       return (
         <g>
-          <path d="M28 55 L52 55 L48 32 Q40 22 32 32 Z" fill={`url(#goldG-${id})`} stroke="#8B6914" strokeWidth="1.5" />
-          <circle cx="40" cy="58" r="4" fill="#8B6914" />
-          <circle cx="40" cy="30" r="3" fill="#5D3A1A" />
+          {/* Ancient trident with blue energy */}
+          <path
+            d="M34 58
+               L34 40
+               Q34 34 38 32
+               Q40 31 42 32
+               Q46 34 46 40
+               L46 58 Z"
+            fill="#0A4A40"
+            opacity="0.22"
+          />
+          <g fill="none" stroke="#1FE3B4" strokeWidth="3" strokeLinecap="round" opacity="0.42">
+            <path d="M40 22 L28 40" />
+            <path d="M40 22 L52 40" />
+          </g>
+          <g fill="none" stroke={`url(#goldG-${id})`} strokeWidth="2" strokeLinecap="round">
+            <path d="M40 18 L40 58" />
+            <path d="M40 24 L30 40" />
+            <path d="M40 24 L50 40" />
+            <path d="M40 32 L36 42 L44 42 Z" fill="#1FE3B4" opacity="0.15" />
+          </g>
+          <circle cx="40" cy="56" r="5" fill={`url(#goldG-${id})`} opacity="0.65" />
+          {/* Energy streak */}
+          <path
+            d="M40 28 C38 36, 38 44, 40 52"
+            fill="none"
+            stroke="#00FF9C"
+            strokeWidth="2.8"
+            opacity="0.18"
+          />
         </g>
       );
     case 'skull':
       return (
         <g>
-          <ellipse cx="40" cy="38" rx="18" ry="20" fill={`url(#goldG-${id})`} stroke="#8B6914" strokeWidth="1" />
-          <ellipse cx="32" cy="36" rx="5" ry="6" fill="#1A1000" />
-          <ellipse cx="48" cy="36" rx="5" ry="6" fill="#1A1000" />
-          <path d="M32 48 Q40 54 48 48" fill="none" stroke="#1A1000" strokeWidth="2" />
+          {/* Giant pearl (high-tier) */}
+          <ellipse cx="40" cy="40" rx="18" ry="22" fill="#0B2E3C" opacity="0.35" />
+          <ellipse cx="40" cy="42" rx="16.5" ry="20.5" fill="#E8DCC8" opacity="0.92" />
+          <ellipse cx="40" cy="40" rx="12" ry="14" fill="#FFFFFF" opacity="0.18" />
+          <ellipse cx="37" cy="36" rx="6" ry="8" fill="#1FE3B4" opacity="0.22" />
+          <ellipse cx="44" cy="44" rx="6" ry="8" fill="#FFC94A" opacity="0.16" />
+          <path
+            d="M30 40 C34 34, 40 34, 50 42"
+            fill="none"
+            stroke="#FFFFFF"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+            opacity="0.2"
+          />
+          <ellipse cx="40" cy="42" rx="18" ry="21" fill="none" stroke={`url(#goldG-${id})`} strokeWidth="1.6" opacity="0.55" />
+          {/* Pearl glow */}
+          <circle cx="40" cy="40" r="22" fill="#1FE3B4" opacity="0.08" />
         </g>
       );
     case 'crown':
