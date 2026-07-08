@@ -58,6 +58,9 @@ curl http://localhost:3001/api/slot/calibration
 ## Structure
 
 ```
-client/src/   components, assets/symbols (SVG), gameLogic, audio, PixiJS scene
-server/src/   math, rng, gameLogic/SlotEngine
+client/public/assets/   Drop generated WebP/PNG art here (see docs/art-generation-prompts.md)
+client/src/             components, assets/symbols (SVG + raster fallback), gameLogic, PixiJS scene
+docs/                   art-generation-prompts.md — Midjourney / SDXL prompt sheet
+server/src/               math, rng, gameLogic/SlotEngine
+tools/kraken_sim.py       Monte Carlo RTP calibration
 ```

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import type { InkOrb, SymbolId } from '../../types';
 import { SymbolIcon } from '../../assets/symbols';
+import { GAME_ASSETS } from '../../assets/manifest';
+import { useRasterAsset } from '../../assets/useRasterAsset';
 import { PaylineTrace } from '../PaylineTrace';
 import type { LineWin } from '../../types';
 import styles from './ReelGrid.module.css';
@@ -37,6 +39,10 @@ export function ReelGrid({
   const [activeReels, setActiveReels] = useState([false, false, false, false, false]);
   const [landed, setLanded] = useState([false, false, false, false, false]);
   const doneRef = useRef(false);
+  const frameSrc = useRasterAsset([
+    GAME_ASSETS.reelFrame,
+    GAME_ASSETS.reelFrameFallback,
+  ]);
 
   useEffect(() => {
     if (!spinning) {
@@ -88,8 +94,11 @@ export function ReelGrid({
     inkOrbs.find((o) => o.row === row && o.col === col);
 
   return (
-    <div className={`${styles.frame} ${anticipation && spinning ? styles.anticipation : ''}`}>
-      <div className={styles.brassRim} />
+    <div
+      className={`${styles.frame} ${anticipation && spinning ? styles.anticipation : ''} ${frameSrc ? styles.frameRaster : ''}`}
+      style={frameSrc ? { backgroundImage: `url(${frameSrc})` } : undefined}
+    >
+      {!frameSrc && <div className={styles.brassRim} />}
       <div className={styles.inner}>
         <div className={styles.causticTop} />
         <span className={styles.badge}>20 LINES</span>

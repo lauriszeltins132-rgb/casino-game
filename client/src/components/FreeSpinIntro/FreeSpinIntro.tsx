@@ -1,4 +1,6 @@
 import styles from './FreeSpinIntro.module.css';
+import { GAME_ASSETS } from '../../assets/manifest';
+import { useRasterAsset } from '../../assets/useRasterAsset';
 
 interface Props {
   spins: number;
@@ -19,10 +21,18 @@ export function FreeSpinIntro({ spins, onStart }: Props) {
 }
 
 export function BonusCinematic({ onComplete }: { onComplete: () => void }) {
+  const heroSrc = useRasterAsset([
+    GAME_ASSETS.heroKraken,
+    GAME_ASSETS.heroKrakenFallback,
+  ]);
+
   return (
     <div className={styles.cinematic} onAnimationEnd={onComplete}>
+      {heroSrc && (
+        <img src={heroSrc} alt="" className={styles.heroArt} draggable={false} />
+      )}
       <div className={styles.shake}>
-        <div className={styles.krakenBurst} />
+        {!heroSrc && <div className={styles.krakenBurst} />}
         <h2>THE KRAKEN RISES</h2>
       </div>
     </div>

@@ -7,6 +7,22 @@
   transition: box-shadow 0.3s;
 }
 
+.frameRaster {
+  --frame-inset: 14%;
+  padding: 0;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  border-radius: 0;
+  max-width: 480px;
+}
+
+.frameRaster .inner {
+  margin: var(--frame-inset);
+  background: transparent;
+  box-shadow: none;
+}
+
 .anticipation {
   animation: anticipation-pulse 0.4s ease-in-out infinite alternate;
 }

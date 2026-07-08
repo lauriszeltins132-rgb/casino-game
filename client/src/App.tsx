@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, lazy, Suspense } from 'react'
 import { api } from './gameLogic/api';
 import { getWinningCells } from './gameLogic/helpers';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { SceneBackground } from './components/SceneBackground';
 import { HUD, RealityCheck } from './components/HUD';
 import { ReelGrid } from './components/ReelGrid';
 import { Controls } from './components/Controls';
@@ -248,6 +249,7 @@ export default function App() {
     <div className={styles.app}>
       <div className={styles.oceanBg} aria-hidden />
       <div className={styles.vignette} aria-hidden />
+      <SceneBackground />
       <ErrorBoundary>
         <Suspense fallback={null}>
           <OceanScene intensity={oceanIntensity} bigWin={win > bet * 20} />
