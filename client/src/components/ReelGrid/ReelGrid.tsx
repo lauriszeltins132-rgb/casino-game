@@ -209,6 +209,14 @@ export function ReelGrid({
                   const orb = orbAt(row, col);
                   const sym = display[row][col];
                   const specialOn = resultRevealed || landedHere;
+                  const idle =
+                    resultRevealed &&
+                    !win &&
+                    !landedHere &&
+                    sym !== 'wild' &&
+                    sym !== 'scatter' &&
+                    sym !== 'chest' &&
+                    sym !== 'crown';
                   return (
                     <div
                       key={row}
@@ -219,6 +227,7 @@ export function ReelGrid({
                         specialOn && sym === 'scatter' ? styles.cellScatter : '',
                         specialOn && sym === 'chest' ? styles.cellChest : '',
                         specialOn && sym === 'crown' ? styles.cellCrown : '',
+                        idle ? styles.cellIdle : '',
                       ].join(' ')}
                     >
                       <SymbolIcon
