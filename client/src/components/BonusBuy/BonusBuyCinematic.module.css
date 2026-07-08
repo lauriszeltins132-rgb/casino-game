@@ -4,6 +4,7 @@
   z-index: 120;
   pointer-events: auto;
   background: rgba(5, 11, 20, 0.65);
+  transform: translateZ(0);
 }
 
 .darken {
@@ -229,6 +230,22 @@
   transform: translateX(-50%) translateY(-6px);
 }
 
+.overlay[data-stage='opening'] {
+  animation: camera-zoom 0.9s ease-out forwards;
+}
+
+@keyframes camera-zoom {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.035);
+  }
+  100% {
+    transform: scale(1.01);
+  }
+}
+
 .doorFrame {
   position: absolute;
   left: 50%;
@@ -365,6 +382,47 @@
   pointer-events: none;
 }
 
+.overlay[data-stage='opening'] .chestBtn[data-state='picked'] .chestBody {
+  animation: chest-shake 1s ease-out forwards;
+}
+
+.overlay[data-stage='opening'] .chestBtn[data-state='picked'] .chestTop {
+  animation: lid-open 1s ease-out forwards;
+}
+
+@keyframes chest-shake {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-6px) rotate(-2.5deg);
+  }
+  55% {
+    transform: translateY(0px) rotate(2deg);
+  }
+  80% {
+    transform: translateY(-2px) rotate(-1deg);
+  }
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+@keyframes lid-open {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  35% {
+    transform: translateY(-2px) rotate(-14deg);
+  }
+  75% {
+    transform: translateY(0) rotate(5deg);
+  }
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
 @keyframes lock-break {
   0% {
     opacity: 0;
@@ -403,6 +461,25 @@
   color: #FFC94A;
   font-weight: 900;
   text-shadow: 0 0 35px rgba(255, 201, 74, 0.2);
+}
+
+.overlay[data-stage='opening'] .rewardLine {
+  animation: reward-pop 0.9s ease-out forwards;
+}
+
+@keyframes reward-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.92);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(0) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1);
+  }
 }
 
 .rewardSub {
