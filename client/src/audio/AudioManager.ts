@@ -1,6 +1,19 @@
 /** Audio manager — placeholder hooks for production sound assets */
 
-type SoundId = 'spin' | 'reel_stop' | 'win_small' | 'win_big' | 'win_epic' | 'scatter' | 'bonus_enter' | 'chest_open' | 'button' | 'rage_up';
+type SoundId =
+  | 'spin'
+  | 'reel_stop'
+  | 'win_small'
+  | 'win_big'
+  | 'win_epic'
+  | 'scatter'
+  | 'bonus_enter'
+  | 'chest_open'
+  | 'button'
+  | 'rage_up'
+  | 'ocean_rumble'
+  | 'kraken_roar'
+  | 'water_splash';
 
 const SOUND_FILES: Partial<Record<SoundId, string>> = {
   spin: '/audio/spin.mp3',
@@ -13,6 +26,9 @@ const SOUND_FILES: Partial<Record<SoundId, string>> = {
   chest_open: '/audio/chest_open.mp3',
   button: '/audio/button.mp3',
   rage_up: '/audio/rage_up.mp3',
+  ocean_rumble: '/audio/ocean_rumble.mp3',
+  kraken_roar: '/audio/kraken_roar.mp3',
+  water_splash: '/audio/water_splash.mp3',
 };
 
 class AudioManager {

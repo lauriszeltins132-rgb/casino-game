@@ -36,9 +36,15 @@ export function BonusBuyCinematic({
   }, [tier]);
 
   useEffect(() => {
+    // Match premium “BUY KRAKEN'S LAIR” pacing:
+    // 0-0.5s: instant darken + rumble + shake
+    // 0.5-2s: tentacles appear + water distortion (handled by CSS + OceanScene intensity)
+    // 2-4s: eye opens + magical glow + screen flash
+    // 4+s: transition into the lair chamber (chest pick)
+    audio.play('ocean_rumble');
     audio.play('bonus_enter');
-    const t1 = window.setTimeout(() => setStage('eye'), 1050);
-    const t2 = window.setTimeout(() => setStage('pick'), 3450);
+    const t1 = window.setTimeout(() => setStage('eye'), 2300);
+    const t2 = window.setTimeout(() => setStage('pick'), 4600);
     return () => {
       window.clearTimeout(t1);
       window.clearTimeout(t2);
@@ -61,7 +67,31 @@ export function BonusBuyCinematic({
     if (stage !== 'pick' || picked !== null) return;
     setPicked(index);
     setStage('opening');
+    audio.play('water_splash');
   };
+
+  const coinBurst = useMemo(() => {
+    const count = rewardMultiplier >= 400 ? 28 : rewardMultiplier >= 150 ? 20 : 14;
+    const rand = (seed: number) => {
+      let x = Math.sin(seed) * 10000;
+      return x - Math.floor(x);
+    };
+    const seedBase = (picked ?? 0) * 997 + rewardMultiplier;
+    return Array.from({ length: count }, (_, i) => {
+      const r1 = rand(seedBase + i * 1.17);
+      const r2 = rand(seedBase + i * 2.31);
+      const r3 = rand(seedBase + i * 3.77);
+      return {
+        id: i,
+        left: 50 + (r1 - 0.5) * 44,
+        delay: r2 * 0.25,
+        dur: 0.95 + r3 * 0.65,
+        dx: (r1 - 0.5) * 280,
+        dy: -200 - r2 * 260,
+        scale: 0.7 + r3 * 0.55,
+      };
+    });
+  }, [rewardMultiplier, picked]);
 
   return (
     <div className={styles.overlay} data-stage={stage}>
@@ -79,6 +109,8 @@ export function BonusBuyCinematic({
 
       <div className={styles.darken} aria-hidden />
 
+      <div className={styles.waterDistortion} aria-hidden />
+
       <div className={styles.tentacles} aria-hidden>
         <div className={styles.tentacleLeft} />
         <div className={styles.tentacleRight} />
@@ -93,6 +125,15 @@ export function BonusBuyCinematic({
           </div>
         </div>
         <div className={styles.eyeCaption}>BUY KRAKEN&apos;S LAIR</div>
+      </div>
+
+      <div className={styles.screenFlash} aria-hidden />
+
+      {/* Rising bubbles / gold particles */}
+      <div className={styles.bubbleField} aria-hidden>
+        {Array.from({ length: 42 }).map((_, i) => (
+          <div key={i} className={styles.bubble} style={{ ['--bi' as any]: i }} />
+        ))}
       </div>
 
       {/* Treasure chamber + pick */}
@@ -129,6 +170,25 @@ export function BonusBuyCinematic({
           </div>
           <div className={styles.rewardSub}>Cost: ${Number(bet * (rewardMultiplier as number)).toFixed(2)}</div>
         </div>
+
+      {stage === 'opening' && picked !== null && (
+        <div className={styles.coinExplosion} aria-hidden>
+          {coinBurst.map((c) => (
+            <div
+              key={c.id}
+              className={styles.coin}
+              style={{
+                left: `${c.left}%`,
+                animationDelay: `${c.delay}s`,
+                animationDuration: `${c.dur}s`,
+                ['--dx' as any]: `${c.dx}px`,
+                ['--dy' as any]: `${c.dy}px`,
+                transform: `scale(${c.scale})`,
+              }}
+            />
+          ))}
+        </div>
+      )}
       </div>
 
       {/* Golden particles */}

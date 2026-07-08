@@ -366,9 +366,12 @@ export default function App() {
                   setFsSessionId(result.freeSpinState.sessionId);
                   setFsRemaining(result.freeSpinState.remaining);
                   fsIdRef.current = result.freeSpinState.sessionId;
+                  setPendingFs(result.freeSpinsAwarded);
+                  setShowFsIntro(true);
                 }
 
-                setPhase('spinning');
+                // Let the FreeSpinIntro handle the transition into the first free spin.
+                setPhase('idle');
               } catch (err) {
                 setError((err as Error).message);
                 setPhase('idle');
