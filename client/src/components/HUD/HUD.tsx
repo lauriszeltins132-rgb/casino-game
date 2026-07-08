@@ -33,7 +33,7 @@ export function HUD({
       <div className={styles.brand}>
         <h1 className={styles.title}>Kraken&apos;s Lair</h1>
         <p className={styles.disclosure}>
-          RTP {targetRtp}% · {volatility} vol · Session {mins}:{secs.toString().padStart(2, '0')}
+          RTP {targetRtp}% · {volatility} vol · Session {mins}:{secs.toString().padStart(2, '0')} · Premium UX
         </p>
       </div>
 
