@@ -14,6 +14,7 @@ import { FreeSpinIntro } from './components/FreeSpinIntro';
 import { audio } from './audio/AudioManager';
 import { RageFlashOverlay } from './components/RageFlashOverlay';
 import { BonusBuyCinematic } from './components/BonusBuy';
+import { KrakenLairOverlay } from './components/KrakenLairOverlay';
 import type {
   AutoplaySettings,
   BonusBuyTier,
@@ -262,6 +263,8 @@ export default function App() {
           <OceanScene intensity={oceanIntensity} bigWin={win > bet * 20} />
         </Suspense>
       </ErrorBoundary>
+
+      {phase === 'freespin' && <KrakenLairOverlay />}
 
       <HUD
         balance={balance}

@@ -1,0 +1,2 @@
+export { KrakenLairOverlay } from './KrakenLairOverlay';
+

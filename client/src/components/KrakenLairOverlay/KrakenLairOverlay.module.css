@@ -1,0 +1,95 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 4; /* behind main (z-index 5) */
+  pointer-events: none;
+}
+
+.ambientGlow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 60%, rgba(31, 227, 180, 0.18) 0%, rgba(5, 11, 20, 0) 52%);
+  animation: lair-pulse 3.6s ease-in-out infinite;
+}
+
+.backVignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0) 30%, rgba(0, 0, 0, 0.55) 82%);
+}
+
+@keyframes lair-pulse {
+  0%, 100% {
+    filter: saturate(1) brightness(1);
+    opacity: 0.85;
+  }
+  50% {
+    filter: saturate(1.2) brightness(1.15);
+    opacity: 1;
+  }
+}
+
+.templeArch {
+  position: absolute;
+  left: 50%;
+  top: 22%;
+  transform: translateX(-50%);
+  width: min(860px, 92vw);
+  height: 360px;
+  border-radius: 46% 46% 26% 26% / 60% 60% 24% 24%;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(255, 201, 74, 0.12) 0%, rgba(31, 227, 180, 0.06) 34%, rgba(0, 0, 0, 0) 68%),
+    linear-gradient(180deg, rgba(8, 18, 32, 0.0) 0%, rgba(8, 18, 32, 0.8) 60%, rgba(0, 0, 0, 0.9) 100%);
+  border: 1px solid rgba(139, 115, 85, 0.18);
+  box-shadow: inset 0 0 40px rgba(31, 227, 180, 0.07), 0 30px 120px rgba(0, 0, 0, 0.45);
+  animation: arch-breathe 4.2s ease-in-out infinite;
+}
+
+@keyframes arch-breathe {
+  0%, 100% {
+    transform: translateX(-50%) scale(1);
+    opacity: 0.95;
+  }
+  50% {
+    transform: translateX(-50%) scale(1.01);
+    opacity: 1;
+  }
+}
+
+.treasureSparkles {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  transform: translateX(-50%);
+  width: min(660px, 88vw);
+  height: 260px;
+}
+
+.sparkle {
+  position: absolute;
+  left: calc(10% + (var(--i) * 2.4%));
+  top: 30%;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 201, 74, 1) 0%, rgba(31, 227, 180, 0.7) 42%, transparent 70%);
+  opacity: 0;
+  animation: sparkle-float 2.3s ease-out infinite;
+  animation-delay: calc(var(--i) * 0.06s);
+  filter: saturate(1.2);
+}
+
+@keyframes sparkle-float {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.6);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-90px) scale(1.2);
+  }
+}
+
