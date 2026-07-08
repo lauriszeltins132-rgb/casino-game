@@ -6,50 +6,56 @@ interface Props {
   bigWin?: boolean;
 }
 
-function isSafari(): boolean {
-  if (typeof navigator === 'undefined') return false;
-  const ua = navigator.userAgent;
-  // Safari detection: includes "Safari" but not Chrome/Chromium/Android.
-  return /Safari/i.test(ua) && !/Chrome|Chromium|Android/i.test(ua);
+function safeDestroy(app: Application | null) {
+  if (!app) return;
+  try {
+    app.destroy(true);
+  } catch (err) {
+    console.warn('OceanScene destroy skipped:', err);
+  }
 }
 
 export function OceanScene({ intensity = 'base', bigWin = false }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<Application | null>(null);
 
-  // Pixi canvas resize can throw in Safari (observed: "this._canvasResize is not a function").
-  // We intentionally disable Pixi on Safari so the UI never crashes; the game keeps its
-  // bright CSS ocean + KrakenBackground layers as the fallback.
-  if (isSafari()) {
-    return null;
-  }
-
   useEffect(() => {
     if (!containerRef.current) return;
     let destroyed = false;
+    const host = containerRef.current;
 
     const app = new Application();
     appRef.current = app;
 
+    const resize = () => {
+      if (!host || destroyed) return;
+      app.renderer.resize(host.clientWidth, host.clientHeight);
+    };
+
     (async () => {
       try {
         await app.init({
-          resizeTo: containerRef.current!,
+          width: host.clientWidth,
+          height: host.clientHeight,
           backgroundAlpha: 0,
           antialias: true,
           preference: 'webgl',
         });
       } catch (err) {
         console.warn('OceanScene WebGL init failed — CSS fallback will show:', err);
+        safeDestroy(app);
+        appRef.current = null;
         return;
       }
 
       if (destroyed) {
-        app.destroy(true);
+        safeDestroy(app);
+        appRef.current = null;
         return;
       }
 
-      containerRef.current!.appendChild(app.canvas);
+      host.appendChild(app.canvas);
+      window.addEventListener('resize', resize);
 
       const w = () => app.screen.width;
       const h = () => app.screen.height;
@@ -578,7 +584,8 @@ export function OceanScene({ intensity = 'base', bigWin = false }: Props) {
 
     return () => {
       destroyed = true;
-      appRef.current?.destroy(true);
+      window.removeEventListener('resize', resize);
+      safeDestroy(appRef.current);
       appRef.current = null;
     };
   }, []);

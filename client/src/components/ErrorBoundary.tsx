@@ -47,6 +47,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <div style={{ opacity: 0.9, fontSize: 13, lineHeight: 1.4, maxWidth: 520, margin: '0 auto' }}>
               {this.state.message}
             </div>
+            <div style={{ opacity: 0.55, fontSize: 11, marginTop: 12 }}>Build kraken-v5</div>
           </div>
         </div>
       );

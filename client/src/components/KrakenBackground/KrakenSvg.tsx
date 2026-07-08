@@ -1,4 +1,4 @@
-/** Inline SVG Kraken boss — visible on all browsers including Safari (no Pixi). */
+/** Inline SVG Kraken boss — no SVG filters (Safari-safe). Glow via CSS on wrapper. */
 export function KrakenSvg({ strong }: { strong: boolean }) {
   return (
     <svg
@@ -24,19 +24,8 @@ export function KrakenSvg({ strong }: { strong: boolean }) {
           <stop offset="70%" stopColor="#1FE3B4" stopOpacity="0.6" />
           <stop offset="100%" stopColor="#1FE3B4" stopOpacity="0" />
         </radialGradient>
-        <filter id="eyeBlur" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="8" />
-        </filter>
-        <filter id="krakenGlow" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="6" result="blur" />
-          <feMerge>
-            <feMergeNode in="blur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
       </defs>
 
-      {/* Coral reef silhouettes */}
       <g opacity="0.55">
         <ellipse cx="120" cy="620" rx="90" ry="40" fill="#FF6B8A" opacity="0.5" />
         <ellipse cx="200" cy="640" rx="60" ry="30" fill="#FF8C69" opacity="0.4" />
@@ -58,8 +47,7 @@ export function KrakenSvg({ strong }: { strong: boolean }) {
         />
       </g>
 
-      {/* Left tentacles */}
-      <g filter="url(#krakenGlow)">
+      <g>
         <path
           d="M-20 180 C80 220, 120 340, 90 480 C70 560, 40 620, 20 700"
           fill="none"
@@ -75,14 +63,12 @@ export function KrakenSvg({ strong }: { strong: boolean }) {
           strokeLinecap="round"
           opacity="0.85"
         />
-        {/* Suckers left */}
         {[320, 400, 480, 550].map((y, i) => (
           <ellipse key={`sl${i}`} cx={95 - i * 4} cy={y} rx="10" ry="7" fill="#C9A227" opacity="0.5" />
         ))}
       </g>
 
-      {/* Right tentacles */}
-      <g filter="url(#krakenGlow)">
+      <g>
         <path
           d="M920 180 C820 220, 780 340, 810 480 C830 560, 860 620, 880 700"
           fill="none"
@@ -103,8 +89,7 @@ export function KrakenSvg({ strong }: { strong: boolean }) {
         ))}
       </g>
 
-      {/* Bottom tentacles curling under reels */}
-      <g filter="url(#krakenGlow)" opacity="0.9">
+      <g opacity="0.9">
         <path
           d="M280 620 C350 560, 420 600, 450 660"
           fill="none"
@@ -121,26 +106,26 @@ export function KrakenSvg({ strong }: { strong: boolean }) {
         />
       </g>
 
-      {/* Kraken head / mantle */}
-      <ellipse
-        cx="450"
-        cy="260"
-        rx="220"
-        ry="180"
-        fill="url(#krakenHeadGrad)"
-        filter="url(#krakenGlow)"
-      />
+      <ellipse cx="450" cy="260" rx="220" ry="180" fill="url(#krakenHeadGrad)" />
       <ellipse cx="450" cy="240" rx="180" ry="140" fill="#7B3FA0" opacity="0.6" />
 
-      {/* Eye glow halos */}
-      <ellipse cx="370" cy="250" rx="55" ry="40" fill="url(#eyeGlow)" filter="url(#eyeBlur)" opacity={strong ? 1 : 0.75}>
-        <animate attributeName="opacity" values="0.65;1;0.65" dur="2s" repeatCount="indefinite" />
-      </ellipse>
-      <ellipse cx="530" cy="250" rx="55" ry="40" fill="url(#eyeGlow)" filter="url(#eyeBlur)" opacity={strong ? 1 : 0.75}>
-        <animate attributeName="opacity" values="0.65;1;0.65" dur="2.1s" repeatCount="indefinite" />
-      </ellipse>
+      <ellipse
+        cx="370"
+        cy="250"
+        rx="55"
+        ry="40"
+        fill="url(#eyeGlow)"
+        opacity={strong ? 0.95 : 0.75}
+      />
+      <ellipse
+        cx="530"
+        cy="250"
+        rx="55"
+        ry="40"
+        fill="url(#eyeGlow)"
+        opacity={strong ? 0.95 : 0.75}
+      />
 
-      {/* Eyes */}
       <ellipse cx="370" cy="252" rx="38" ry="26" fill="#0A0510" />
       <ellipse cx="530" cy="252" rx="38" ry="26" fill="#0A0510" />
       <ellipse cx="370" cy="250" rx="28" ry="18" fill="#F5C842" />
@@ -150,7 +135,6 @@ export function KrakenSvg({ strong }: { strong: boolean }) {
       <ellipse cx="380" cy="244" rx="4" ry="3" fill="#FFFFFF" opacity="0.7" />
       <ellipse cx="540" cy="244" rx="4" ry="3" fill="#FFFFFF" opacity="0.7" />
 
-      {/* Beak hint */}
       <path d="M450 310 L440 330 L460 330 Z" fill="#1A0530" opacity="0.7" />
     </svg>
   );

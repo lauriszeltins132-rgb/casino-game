@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, lazy, Suspense } from 'react';
+import { useCallback, useEffect, useRef, useState, lazy, Suspense, type ComponentType } from 'react';
 import { api } from './gameLogic/api';
 import { getWinningCells } from './gameLogic/helpers';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -16,6 +16,7 @@ import { RageFlashOverlay } from './components/RageFlashOverlay';
 import { BonusBuyCinematic } from './components/BonusBuy';
 import { KrakenLairOverlay } from './components/KrakenLairOverlay';
 import { KrakenBackground } from './components/KrakenBackground';
+import { isSafari } from './utils/browser';
 import type {
   AutoplaySettings,
   BonusBuyTier,
@@ -27,9 +28,18 @@ import type {
 import './styles/global.css';
 import styles from './styles/App.module.css';
 
-const OceanScene = lazy(() =>
-  import('./components/OceanScene').then((m) => ({ default: m.OceanScene }))
-);
+type OceanSceneProps = {
+  intensity?: 'base' | 'freespin' | 'anticipation' | 'bonus';
+  bigWin?: boolean;
+};
+
+function OceanSceneFallback() {
+  return null;
+}
+
+const OceanScene: ComponentType<OceanSceneProps> = isSafari()
+  ? OceanSceneFallback
+  : lazy(() => import('./components/OceanScene').then((m) => ({ default: m.OceanScene })));
 
 export default function App() {
   const [config, setConfig] = useState<GameConfig | null>(null);
@@ -264,7 +274,9 @@ export default function App() {
           <OceanScene intensity={oceanIntensity} bigWin={win > bet * 20} />
         </Suspense>
 
-        <KrakenBackground intensity={oceanIntensity} />
+        <ErrorBoundary fallback={null}>
+          <KrakenBackground intensity={oceanIntensity} />
+        </ErrorBoundary>
 
         {phase === 'freespin' && <KrakenLairOverlay />}
 
